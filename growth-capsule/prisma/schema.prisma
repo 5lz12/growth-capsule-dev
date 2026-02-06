@@ -1,0 +1,48 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./growth-capsule.db"
+}
+
+model Child {
+  id         String   @id @default(cuid())
+  name       String
+  birthDate  DateTime
+  gender     String
+  avatarUrl  String?  // 头像图片URL
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  records    Record[]
+}
+
+model Record {
+  id          String   @id @default(cuid())
+  childId     String
+  child       Child     @relation(fields: [childId], references: [id], onDelete: Cascade)
+  category    String // 行为类别: 运动、语言、社交、认知、情感
+  behavior    String // 具体行为描述
+  date        DateTime
+  ageInMonths Int // 发生时的月龄
+  notes       String?
+  analysis    String? // 心理学分析结果
+  milestones  String? // 对应的发展里程碑
+  imageUrl    String? // 图片URL
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([childId, date])
+}
+
+model AnalysisRule {
+  id          String   @id @default(cuid())
+  ageRange    String // "0-3", "3-6", "6-12", "12-24", "24-36" (月)
+  category    String // 行为类别
+  behaviorKey String // 行为关键词
+  analysis    String // 心理学分析
+  milestone   String // 对应里程碑
+  importance  String // "critical", "important", "normal"
+  createdAt   DateTime @default(now())
+}
