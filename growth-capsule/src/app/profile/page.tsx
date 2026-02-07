@@ -269,14 +269,17 @@ export default async function ProfilePage() {
                   <span className="text-gray-400">→</span>
                 </Link>
 
-                <div className="flex items-center gap-3 p-3 rounded-lg opacity-60">
+                <Link
+                  href="/export"
+                  className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                >
                   <span className="text-2xl">📸</span>
                   <div className="flex-1">
                     <p className="font-medium text-gray-800">成长回忆册导出</p>
                     <p className="text-xs text-gray-500">生成 PDF 或长图</p>
                   </div>
-                  <span className="text-xs text-gray-500">即将上线</span>
-                </div>
+                  <span className="text-gray-400">→</span>
+                </Link>
 
                 <div className="flex items-center gap-3 p-3 rounded-lg opacity-60">
                   <span className="text-2xl">📚</span>
