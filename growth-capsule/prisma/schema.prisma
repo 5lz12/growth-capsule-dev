@@ -30,10 +30,12 @@ model Record {
   analysis    String? // 心理学分析结果
   milestones  String? // 对应的发展里程碑
   imageUrl    String? // 图片URL
+  isFavorite  Boolean  @default(false) // 是否收藏
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   @@index([childId, date])
+  @@index([childId, isFavorite])
 }
 
 model AnalysisRule {

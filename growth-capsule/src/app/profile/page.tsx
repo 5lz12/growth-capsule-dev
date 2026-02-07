@@ -13,6 +13,18 @@ export default async function ProfilePage() {
     orderBy: { createdAt: 'desc' },
   })
 
+  // 获取所有收藏的记录
+  const favoriteRecords = await prisma.record.findMany({
+    where: {
+      isFavorite: true,
+    },
+    include: {
+      child: true,
+    },
+    orderBy: { date: 'desc' },
+    take: 10,
+  })
+
   const totalRecords = children.reduce((sum, child) => sum + child.records.length, 0)
   const totalExplorationThemes = new Set(
     children.flatMap(child => child.records.map(r => r.category))
@@ -148,6 +160,54 @@ export default async function ProfilePage() {
               <div className="text-3xl mb-2">➕</div>
               <p className="text-gray-600">添加孩子</p>
             </Link>
+
+            {/* 珍藏的瞬间 */}
+            {favoriteRecords.length > 0 && (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                    <span className="text-2xl">⭐</span>
+                    <span>珍藏的瞬间</span>
+                  </h3>
+                  <span className="text-sm text-gray-500">{favoriteRecords.length} 条</span>
+                </div>
+
+                <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+                  {favoriteRecords.map((record) => (
+                    <Link
+                      key={record.id}
+                      href={`/children/${record.childId}/insights/${record.id}`}
+                      className="flex-shrink-0 w-40 group"
+                    >
+                      {record.imageUrl ? (
+                        <div className="relative w-40 h-40 rounded-xl overflow-hidden border-2 border-brand-200 mb-2 group-hover:border-brand-400 transition-all shadow-sm group-hover:shadow-md">
+                          <img
+                            src={record.imageUrl}
+                            alt={record.behavior}
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute top-2 right-2 p-1 bg-brand-500/90 rounded-full">
+                            <svg className="w-4 h-4 text-white fill-current" viewBox="0 0 24 24">
+                              <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                            </svg>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="w-40 h-40 rounded-xl border-2 border-brand-200 mb-2 flex items-center justify-center bg-gradient-to-br from-brand-50 to-accent-50 group-hover:border-brand-400 transition-all">
+                          <span className="text-4xl">📝</span>
+                        </div>
+                      )}
+                      <p className="text-sm text-gray-700 line-clamp-2 leading-snug">
+                        {record.behavior}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {record.child.name} · {new Date(record.date).toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric' })}
+                      </p>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="bg-gradient-to-br from-accent-50 to-brand-50 rounded-xl border border-accent-100 p-6">
               <h3 className="text-lg font-bold text-accent-600 mb-4">📊 成长概览</h3>

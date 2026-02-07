@@ -3,11 +3,12 @@ import prisma from '@/lib/prisma'
 import { BEHAVIOR_CATEGORIES } from '@/types'
 import { formatAge } from '@/lib/utils'
 import { TimelineCategoryFilter } from './components/TimelineCategoryFilter'
+import { TimelineSearchBar } from '@/components/TimelineSearchBar'
 
 export default async function TimelinePage({
   searchParams,
 }: {
-  searchParams: { childId?: string; category?: string }
+  searchParams: { childId?: string; category?: string; search?: string }
 }) {
   // 获取所有孩子
   const children = await prisma.child.findMany({
@@ -42,11 +43,23 @@ export default async function TimelinePage({
     orderBy: { date: 'desc' },
   })
 
+  // 搜索筛选
+  const searchQuery = searchParams.search?.trim().toLowerCase() || null
+  let filteredRecords = records
+
+  if (searchQuery) {
+    filteredRecords = records.filter(r =>
+      r.behavior.toLowerCase().includes(searchQuery) ||
+      (r.notes && r.notes.toLowerCase().includes(searchQuery)) ||
+      BEHAVIOR_CATEGORIES.find(c => c.value === r.category)?.label.includes(searchQuery)
+    )
+  }
+
   // 分类筛选
   const categoryFilter = searchParams.category || null
-  const filteredRecords = categoryFilter
-    ? records.filter(r => r.category === categoryFilter)
-    : records
+  if (categoryFilter) {
+    filteredRecords = filteredRecords.filter(r => r.category === categoryFilter)
+  }
 
   // 按日期分组
   const groupedRecords = groupByDate(filteredRecords)
@@ -81,11 +94,23 @@ export default async function TimelinePage({
           </div>
         )}
 
+        {/* 搜索栏 */}
+        <TimelineSearchBar childId={selectedChild.id} />
+
         {/* 分类筛选 */}
         <TimelineCategoryFilter
           records={records}
           childId={selectedChild.id}
         />
+
+        {/* 搜索结果提示 */}
+        {searchQuery && (
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-gray-600">
+              找到 <strong className="text-brand-600">{filteredRecords.length}</strong> 条包含 "{searchParams.search}" 的记录
+            </span>
+          </div>
+        )}
 
         {/* 时光轴内容 */}
         {filteredRecords.length === 0 ? (
