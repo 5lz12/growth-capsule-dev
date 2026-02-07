@@ -226,11 +226,11 @@ export function UnifiedRecordForm({ childId, childName }: UnifiedRecordFormProps
         {/* 图片预览 */}
         {imagePreview && (
           <div className="px-6 pb-4">
-            <div className="relative rounded-xl overflow-hidden border-2 border-gray-200">
+            <div className="relative rounded-xl overflow-hidden border-2 border-gray-200 bg-gray-50">
               <img
                 src={imagePreview}
                 alt="上传的图片"
-                className="w-full h-64 object-cover"
+                className="w-full max-h-96 object-contain"
               />
               <button
                 type="button"

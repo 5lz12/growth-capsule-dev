@@ -89,11 +89,11 @@ export default async function InsightDetailPage({
         {/* 记录回顾卡 */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
           {record.imageUrl && (
-            <div className="relative h-64 bg-gray-100">
+            <div className="relative bg-gray-50">
               <img
                 src={record.imageUrl}
                 alt={record.behavior}
-                className="w-full h-full object-cover"
+                className="w-full max-h-96 object-contain"
               />
             </div>
           )}

@@ -186,7 +186,7 @@ export default async function TimelinePage({
                             <img
                               src={record.imageUrl}
                               alt="记录图片"
-                              className="w-full h-48 object-cover"
+                              className="w-full max-h-96 object-contain bg-gray-50"
                             />
                           </div>
                         )}
