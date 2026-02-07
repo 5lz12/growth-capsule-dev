@@ -174,7 +174,7 @@ export default async function TimelinePage({
 
                           {hasAnalysis && (
                             <Link
-                              href={`/children/${selectedChild.id}?category=${record.category}#record-${record.id}`}
+                              href={`/children/${selectedChild.id}/insights/${record.id}`}
                               className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full border border-dashed border-accent-400 text-accent-600 text-xs font-medium hover:bg-accent-50 transition-colors"
                             >
                               <span>✨</span> 查看AI解读
