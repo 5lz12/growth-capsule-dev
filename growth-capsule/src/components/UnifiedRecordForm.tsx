@@ -53,6 +53,15 @@ export function UnifiedRecordForm({ childId, childName }: UnifiedRecordFormProps
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
+      // 检查 HEIC/HEIF 格式（iOS 默认格式）
+      if (file.type === 'image/heic' || file.type === 'image/heif' || file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')) {
+        alert('⚠️ 不支持 HEIC 格式的图片\n\n请在 iPhone 设置中更改：\n设置 → 相机 → 格式 → 选择"最兼容"\n\n或者使用其他格式的图片（JPG/PNG）')
+        if (fileInputRef.current) {
+          fileInputRef.current.value = ''
+        }
+        return
+      }
+
       setImageFile(file)
       const reader = new FileReader()
       reader.onloadend = () => {
@@ -194,7 +203,7 @@ export function UnifiedRecordForm({ childId, childName }: UnifiedRecordFormProps
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*"
+              accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
               onChange={handleImageSelect}
               className="hidden"
               id="image-upload"

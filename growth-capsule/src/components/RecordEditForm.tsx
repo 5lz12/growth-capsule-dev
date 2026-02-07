@@ -24,11 +24,40 @@ export function RecordEditForm({ child, record }: RecordEditFormProps) {
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
+      console.log('[RecordEditForm] Selected file:', file.name, file.type, file.size, 'bytes')
+
+      // 验证文件类型
+      if (!file.type.startsWith('image/')) {
+        alert('请选择图片文件')
+        return
+      }
+
+      // 检查 HEIC/HEIF 格式（iOS 默认格式）
+      if (file.type === 'image/heic' || file.type === 'image/heif' || file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')) {
+        alert('⚠️ 不支持 HEIC 格式的图片\n\n请在 iPhone 设置中更改：\n设置 → 相机 → 格式 → 选择"最兼容"\n\n或者使用其他格式的图片（JPG/PNG）')
+        if (fileInputRef.current) {
+          fileInputRef.current.value = ''
+        }
+        return
+      }
+
+      // 验证文件大小（限制 10MB）
+      if (file.size > 10 * 1024 * 1024) {
+        alert('图片文件太大，请选择小于 10MB 的图片')
+        return
+      }
+
       setImageFile(file)
       setRemoveImage(false)
+
       const reader = new FileReader()
       reader.onloadend = () => {
+        console.log('[RecordEditForm] FileReader finished, result length:', (reader.result as string)?.length)
         setImagePreview(reader.result as string)
+      }
+      reader.onerror = () => {
+        console.error('[RecordEditForm] FileReader error:', reader.error)
+        alert('读取图片失败，请重试')
       }
       reader.readAsDataURL(file)
     }
@@ -138,6 +167,12 @@ export function RecordEditForm({ child, record }: RecordEditFormProps) {
                 src={imagePreview}
                 alt="记录图片"
                 className="w-full h-64 object-cover"
+                onError={(e) => {
+                  console.error('[RecordEditForm] Image load error:', imagePreview?.substring(0, 100))
+                }}
+                onLoad={() => {
+                  console.log('[RecordEditForm] Image loaded successfully')
+                }}
               />
               <button
                 type="button"
@@ -158,7 +193,7 @@ export function RecordEditForm({ child, record }: RecordEditFormProps) {
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*"
+              accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
               onChange={handleImageSelect}
               className="hidden"
               id="image-upload"

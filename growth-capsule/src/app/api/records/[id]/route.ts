@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { writeFile, unlink } from 'fs/promises'
+import { writeFile, unlink, mkdir } from 'fs/promises'
 import { join } from 'path'
+import { existsSync } from 'fs'
 import prisma from '@/lib/prisma'
 import { analyzerManager } from '@/lib/analyzers/analyzer-manager'
 
@@ -65,14 +66,24 @@ export async function PUT(
 
     // 如果上传了新图片
     if (imageFile) {
+      console.log('[Upload] Received image file:', imageFile.name, imageFile.size, 'bytes')
+
       // 删除旧图片文件（如果存在）
       if (record.imageUrl) {
         try {
           const oldImagePath = join(process.cwd(), 'public', record.imageUrl)
           await unlink(oldImagePath)
+          console.log('[Upload] Deleted old image:', oldImagePath)
         } catch (error) {
-          console.error('Failed to delete old image:', error)
+          console.error('[Upload] Failed to delete old image:', error)
         }
+      }
+
+      // 确保上传目录存在
+      const uploadDir = join(process.cwd(), 'public/uploads/records')
+      if (!existsSync(uploadDir)) {
+        console.log('[Upload] Creating upload directory:', uploadDir)
+        await mkdir(uploadDir, { recursive: true })
       }
 
       // 保存新图片
@@ -82,9 +93,13 @@ export async function PUT(
       const filename = `${Date.now()}-${imageFile.name.replace(/[^a-zA-Z0-9.]/g, '')}`
       const filepath = join(process.cwd(), 'public/uploads/records', filename)
 
+      console.log('[Upload] Saving image to:', filepath)
       await writeFile(filepath, buffer)
+      console.log('[Upload] Image saved successfully')
+
       imageUrl = `/uploads/records/${filename}`
-    }
+    } else {
+      console.log('[Upload] No image file received')
 
     // 重新生成分析
     const analysisResult = await analyzerManager.analyze({
