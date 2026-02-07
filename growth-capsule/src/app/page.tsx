@@ -165,12 +165,12 @@ export default async function HomePage() {
                 </Link>
 
                 <Link
-                  href={`/children/${children[0].id}/photo-record`}
+                  href={`/children/${children[0].id}/record`}
                   className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md hover:border-brand-200 transition-all group"
                 >
                   <div className="text-3xl mb-3">📸</div>
                   <p className="font-semibold text-gray-800 group-hover:text-brand-600 transition-colors">
-                    拍照记录
+                    图文记录
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
                     拍照并记录成长瞬间
