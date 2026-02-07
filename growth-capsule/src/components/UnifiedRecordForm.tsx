@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { BEHAVIOR_CATEGORIES } from '@/types'
+import heic2any from 'heic2any'
 
 interface UnifiedRecordFormProps {
   childId: string
@@ -17,6 +18,7 @@ export function UnifiedRecordForm({ childId, childName }: UnifiedRecordFormProps
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isConverting, setIsConverting] = useState(false)
   const [suggestedCategory, setSuggestedCategory] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -50,25 +52,55 @@ export function UnifiedRecordForm({ childId, childName }: UnifiedRecordFormProps
     setSuggestedCategory(suggested)
   }
 
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file) {
-      // 检查 HEIC/HEIF 格式（iOS 默认格式）
-      if (file.type === 'image/heic' || file.type === 'image/heif' || file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')) {
-        alert('⚠️ 不支持 HEIC 格式的图片\n\n请在 iPhone 设置中更改：\n设置 → 相机 → 格式 → 选择"最兼容"\n\n或者使用其他格式的图片（JPG/PNG）')
+    if (!file) return
+
+    let fileToUse = file
+
+    // 检查是否是 HEIC/HEIF 格式并自动转换
+    const isHEIC = file.type === 'image/heic' || file.type === 'image/heif' ||
+                   file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')
+
+    if (isHEIC) {
+      try {
+        setIsConverting(true)
+        console.log('[UnifiedRecordForm] Converting HEIC to JPEG...')
+
+        // 转换 HEIC 为 JPEG
+        const convertedBlob = await heic2any({
+          blob: file,
+          toType: 'image/jpeg',
+          quality: 0.9
+        })
+
+        // heic2any 可能返回数组，取第一个
+        const blob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob
+
+        // 将 Blob 转为 File
+        const newFileName = file.name.replace(/\.(heic|heif)$/i, '.jpg')
+        fileToUse = new File([blob], newFileName, { type: 'image/jpeg' })
+
+        console.log('[UnifiedRecordForm] HEIC converted successfully:', fileToUse.name, fileToUse.size, 'bytes')
+      } catch (error) {
+        console.error('[UnifiedRecordForm] HEIC conversion failed:', error)
+        alert('图片转换失败，请尝试使用其他格式的图片')
+        setIsConverting(false)
         if (fileInputRef.current) {
           fileInputRef.current.value = ''
         }
         return
+      } finally {
+        setIsConverting(false)
       }
-
-      setImageFile(file)
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string)
-      }
-      reader.readAsDataURL(file)
     }
+
+    setImageFile(fileToUse)
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      setImagePreview(reader.result as string)
+    }
+    reader.readAsDataURL(fileToUse)
   }
 
   const removeImage = () => {
@@ -146,9 +178,24 @@ export function UnifiedRecordForm({ childId, childName }: UnifiedRecordFormProps
           ✨ 别担心格式，我会帮你整理
         </p>
         <p className="text-sm text-gray-600">
-          随意记录，AI会自动识别类别并提供专业分析
+          随意记录，AI会自动识别类别并提供专业分析。支持 iPhone HEIC 格式照片自动转换。
         </p>
       </div>
+
+      {/* 转换状态提示 */}
+      {isConverting && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
+          <div className="flex items-center gap-2">
+            <svg className="animate-spin h-5 w-5 text-amber-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p className="text-sm text-amber-800">
+              <strong>正在转换 HEIC 图片...</strong> 请稍候
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* 主输入区域 */}
       <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
@@ -203,10 +250,11 @@ export function UnifiedRecordForm({ childId, childName }: UnifiedRecordFormProps
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+              accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,image/heic,image/heif,.heic,.heif"
               onChange={handleImageSelect}
               className="hidden"
               id="image-upload"
+              disabled={isConverting}
             />
             <label
               htmlFor="image-upload"

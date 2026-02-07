@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { BEHAVIOR_CATEGORIES } from '@/types'
+import heic2any from 'heic2any'
 
 interface RecordEditFormProps {
   child: any
@@ -19,48 +20,80 @@ export function RecordEditForm({ child, record }: RecordEditFormProps) {
   const [imagePreview, setImagePreview] = useState<string | null>(record.imageUrl)
   const [removeImage, setRemoveImage] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isConverting, setIsConverting] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file) {
-      console.log('[RecordEditForm] Selected file:', file.name, file.type, file.size, 'bytes')
+    if (!file) return
 
-      // 验证文件类型
-      if (!file.type.startsWith('image/')) {
-        alert('请选择图片文件')
-        return
-      }
+    console.log('[RecordEditForm] Selected file:', file.name, file.type, file.size, 'bytes')
 
-      // 检查 HEIC/HEIF 格式（iOS 默认格式）
-      if (file.type === 'image/heic' || file.type === 'image/heif' || file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')) {
-        alert('⚠️ 不支持 HEIC 格式的图片\n\n请在 iPhone 设置中更改：\n设置 → 相机 → 格式 → 选择"最兼容"\n\n或者使用其他格式的图片（JPG/PNG）')
+    // 验证文件类型
+    if (!file.type.startsWith('image/') && !file.name.toLowerCase().match(/\.(heic|heif)$/)) {
+      alert('请选择图片文件')
+      return
+    }
+
+    // 验证文件大小（限制 10MB）
+    if (file.size > 10 * 1024 * 1024) {
+      alert('图片文件太大，请选择小于 10MB 的图片')
+      return
+    }
+
+    let fileToUse = file
+
+    // 检查是否是 HEIC/HEIF 格式并自动转换
+    const isHEIC = file.type === 'image/heic' || file.type === 'image/heif' ||
+                   file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')
+
+    if (isHEIC) {
+      try {
+        setIsConverting(true)
+        console.log('[RecordEditForm] Converting HEIC to JPEG...')
+
+        // 转换 HEIC 为 JPEG
+        const convertedBlob = await heic2any({
+          blob: file,
+          toType: 'image/jpeg',
+          quality: 0.9
+        })
+
+        // heic2any 可能返回数组，取第一个
+        const blob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob
+
+        // 将 Blob 转为 File
+        const newFileName = file.name.replace(/\.(heic|heif)$/i, '.jpg')
+        fileToUse = new File([blob], newFileName, { type: 'image/jpeg' })
+
+        console.log('[RecordEditForm] HEIC converted successfully:', fileToUse.name, fileToUse.size, 'bytes')
+      } catch (error) {
+        console.error('[RecordEditForm] HEIC conversion failed:', error)
+        alert('图片转换失败，请尝试使用其他格式的图片')
+        setIsConverting(false)
         if (fileInputRef.current) {
           fileInputRef.current.value = ''
         }
         return
+      } finally {
+        setIsConverting(false)
       }
-
-      // 验证文件大小（限制 10MB）
-      if (file.size > 10 * 1024 * 1024) {
-        alert('图片文件太大，请选择小于 10MB 的图片')
-        return
-      }
-
-      setImageFile(file)
-      setRemoveImage(false)
-
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        console.log('[RecordEditForm] FileReader finished, result length:', (reader.result as string)?.length)
-        setImagePreview(reader.result as string)
-      }
-      reader.onerror = () => {
-        console.error('[RecordEditForm] FileReader error:', reader.error)
-        alert('读取图片失败，请重试')
-      }
-      reader.readAsDataURL(file)
     }
+
+    setImageFile(fileToUse)
+    setRemoveImage(false)
+
+    // 读取并预览
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      console.log('[RecordEditForm] FileReader finished, result length:', (reader.result as string)?.length)
+      setImagePreview(reader.result as string)
+    }
+    reader.onerror = () => {
+      console.error('[RecordEditForm] FileReader error:', reader.error)
+      alert('读取图片失败，请重试')
+    }
+    reader.readAsDataURL(fileToUse)
   }
 
   const handleRemoveImage = () => {
@@ -118,9 +151,24 @@ export function RecordEditForm({ child, record }: RecordEditFormProps) {
       <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
         <p className="text-sm text-blue-800">
           💡 <strong>提示：</strong>
-          修改记录后，系统将重新生成心理学分析。
+          修改记录后，系统将重新生成心理学分析。支持 iPhone HEIC 格式照片自动转换。
         </p>
       </div>
+
+      {/* 转换状态提示 */}
+      {isConverting && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
+          <div className="flex items-center gap-2">
+            <svg className="animate-spin h-5 w-5 text-amber-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p className="text-sm text-amber-800">
+              <strong>正在转换 HEIC 图片...</strong> 请稍候
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* 主编辑区域 */}
       <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
@@ -193,10 +241,11 @@ export function RecordEditForm({ child, record }: RecordEditFormProps) {
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+              accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,image/heic,image/heif,.heic,.heif"
               onChange={handleImageSelect}
               className="hidden"
               id="image-upload"
+              disabled={isConverting}
             />
             <label
               htmlFor="image-upload"
