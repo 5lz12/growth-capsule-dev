@@ -41,3 +41,10 @@ logs/
 # Temporary files
 *.tmp
 .cache/
+
+# User uploads (images, files)
+growth-capsule/public/uploads/*
+!growth-capsule/public/uploads/.gitkeep
+!growth-capsule/public/uploads/records/
+growth-capsule/public/uploads/records/*
+!growth-capsule/public/uploads/records/.gitkeep
