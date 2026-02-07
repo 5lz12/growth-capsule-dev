@@ -197,14 +197,26 @@ export default async function TimelinePage({
                             {formatAge(record.ageInMonths)}
                           </span>
 
-                          {hasAnalysis && (
+                          <div className="flex items-center gap-2">
                             <Link
-                              href={`/children/${selectedChild.id}/insights/${record.id}`}
-                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full border border-dashed border-accent-400 text-accent-600 text-xs font-medium hover:bg-accent-50 transition-colors"
+                              href={`/children/${selectedChild.id}/records/${record.id}/edit`}
+                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-gray-300 text-gray-600 text-xs font-medium hover:bg-gray-50 transition-colors"
                             >
-                              <span>✨</span> 查看AI解读
+                              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
+                              编辑
                             </Link>
-                          )}
+
+                            {hasAnalysis && (
+                              <Link
+                                href={`/children/${selectedChild.id}/insights/${record.id}`}
+                                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full border border-dashed border-accent-400 text-accent-600 text-xs font-medium hover:bg-accent-50 transition-colors"
+                              >
+                                <span>✨</span> 查看AI解读
+                              </Link>
+                            )}
+                          </div>
                         </div>
 
                         {/* 里程碑 */}

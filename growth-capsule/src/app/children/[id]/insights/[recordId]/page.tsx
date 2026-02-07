@@ -61,6 +61,15 @@ export default async function InsightDetailPage({
 
           {/* 右侧操作按钮 */}
           <div className="flex items-center gap-2">
+            <Link
+              href={`/children/${params.id}/records/${params.recordId}/edit`}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              title="编辑记录"
+            >
+              <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            </Link>
             <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors" title="分享">
               <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
@@ -186,7 +195,7 @@ export default async function InsightDetailPage({
 
               <div className="space-y-4">
                 {structuredAnalysis.parentingSuggestions.map((suggestion: any, idx: number) => {
-                  const typeConfig = {
+                  const typeConfigMap = {
                     observe: {
                       icon: '👁️',
                       label: '持续观察',
@@ -215,7 +224,8 @@ export default async function InsightDetailPage({
                       borderColor: 'border-green-200',
                       textColor: 'text-green-900',
                     },
-                  }[suggestion.type] || typeConfig.observe
+                  }
+                  const typeConfig = typeConfigMap[suggestion.type as keyof typeof typeConfigMap] || typeConfigMap.observe
 
                   return (
                     <div
