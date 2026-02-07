@@ -3,7 +3,6 @@
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { BEHAVIOR_CATEGORIES } from '@/types'
-import heic2any from 'heic2any'
 
 interface UnifiedRecordFormProps {
   childId: string
@@ -66,6 +65,9 @@ export function UnifiedRecordForm({ childId, childName }: UnifiedRecordFormProps
       try {
         setIsConverting(true)
         console.log('[UnifiedRecordForm] Converting HEIC to JPEG...')
+
+        // 动态导入 heic2any（仅在客户端）
+        const heic2any = (await import('heic2any')).default
 
         // 转换 HEIC 为 JPEG
         const convertedBlob = await heic2any({

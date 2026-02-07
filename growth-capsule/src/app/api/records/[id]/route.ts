@@ -100,6 +100,7 @@ export async function PUT(
       imageUrl = `/uploads/records/${filename}`
     } else {
       console.log('[Upload] No image file received')
+    }
 
     // 重新生成分析
     const analysisResult = await analyzerManager.analyze({
