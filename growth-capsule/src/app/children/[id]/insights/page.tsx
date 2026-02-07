@@ -51,12 +51,12 @@ export default async function InsightsPage({
   const summary = generateSummary(child, filteredRecords, range)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <div className="min-h-screen">
       <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
           <Link
             href={`/children/${params.id}`}
-            className="text-blue-600 hover:text-blue-700"
+            className="text-brand-600 hover:text-brand-700"
           >
             ← 返回
           </Link>
@@ -89,7 +89,7 @@ export default async function InsightsPage({
                 href={`/children/${params.id}/insights?range=${option.value}`}
                 className={`px-4 py-2 rounded-lg transition-colors ${
                   range === option.value
-                    ? 'bg-blue-600 text-white'
+                    ? 'bg-brand-500 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
@@ -115,7 +115,7 @@ export default async function InsightsPage({
                   <div key={cat.value} className="text-center p-3 bg-gray-50 rounded-lg">
                     <div className="text-2xl mb-1">{cat.icon}</div>
                     <p className="text-xs text-gray-600 truncate">{cat.label}</p>
-                    <p className="text-lg font-bold text-blue-600">{count}</p>
+                    <p className="text-lg font-bold text-brand-600">{count}</p>
                   </div>
                 )
               })}
@@ -142,15 +142,15 @@ export default async function InsightsPage({
               </div>
 
               {/* 发展概述 */}
-              <div className="bg-purple-50 border-l-4 border-purple-500 p-4 overflow-hidden">
-                <p className="text-sm font-medium text-purple-900 mb-2">📊 发展概述</p>
+              <div className="bg-accent-50 border-l-4 border-accent-500 p-4 overflow-hidden">
+                <p className="text-sm font-medium text-accent-600 mb-2">📊 发展概述</p>
                 <p className="text-sm text-gray-700 leading-relaxed break-words whitespace-pre-wrap">{summary.overview}</p>
               </div>
 
               {/* 各维度分析 */}
               {summary.dimensions.map((dim, idx) => (
-                <div key={idx} className="bg-blue-50 border-l-4 border-blue-500 p-4 overflow-hidden">
-                  <p className="text-sm font-medium text-blue-900 mb-2 break-words">
+                <div key={idx} className="bg-brand-50 border-l-4 border-brand-500 p-4 overflow-hidden">
+                  <p className="text-sm font-medium text-brand-700 mb-2 break-words">
                     {dim.icon} {dim.category}
                   </p>
                   <p className="text-sm text-gray-700 mb-2 leading-relaxed break-words">{dim.analysis}</p>
@@ -170,12 +170,12 @@ export default async function InsightsPage({
         )}
 
         {/* 理论基础说明 */}
-        <div className="bg-blue-50 rounded-xl border border-blue-100 p-6">
-          <h3 className="text-sm font-semibold text-blue-900 mb-3">📚 理论基础</h3>
-          <p className="text-xs text-blue-700 leading-relaxed">
+        <div className="bg-brand-50 rounded-xl border border-brand-100 p-6">
+          <h3 className="text-sm font-semibold text-brand-700 mb-3">📚 理论基础</h3>
+          <p className="text-xs text-brand-700 leading-relaxed">
             本洞察分析基于经典发展心理学理论，包括：
           </p>
-          <ul className="text-xs text-blue-700 mt-2 space-y-1 list-disc list-inside">
+          <ul className="text-xs text-brand-700 mt-2 space-y-1 list-disc list-inside">
             <li>皮亚杰认知发展理论</li>
             <li>埃里克森心理社会发展理论</li>
             <li>维果茨基社会文化理论</li>

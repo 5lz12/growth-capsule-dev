@@ -52,10 +52,10 @@ export default async function ChildDetailPage({
       <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <Link href="/" className="text-blue-600 hover:text-blue-700">
+            <Link href="/" className="text-brand-600 hover:text-brand-700">
               ← 返回
             </Link>
-            <Link href="/profile" className="text-gray-400 hover:text-purple-600 transition-colors text-lg" title="我的家庭">
+            <Link href="/profile" className="text-gray-400 hover:text-accent-600 transition-colors text-lg" title="我的家庭">
               🏠
             </Link>
           </div>
@@ -63,7 +63,7 @@ export default async function ChildDetailPage({
             <h1 className="text-xl font-bold text-gray-800">{child.name}</h1>
             <Link
               href={`/children/${params.id}/edit`}
-              className="text-gray-400 hover:text-blue-600 transition-colors p-2"
+              className="text-gray-400 hover:text-brand-600 transition-colors p-2"
               title="编辑资料"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -79,7 +79,7 @@ export default async function ChildDetailPage({
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
           {/* 头像和基本信息 */}
           <div className="flex items-center gap-6 mb-6 pb-6 border-b border-gray-100">
-            <div className="w-24 h-24 rounded-full overflow-hidden bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center flex-shrink-0 border-4 border-white shadow-lg">
+            <div className="w-24 h-24 rounded-full overflow-hidden bg-gradient-to-br from-brand-100 to-accent-100 flex items-center justify-center flex-shrink-0 border-4 border-white shadow-lg">
               {child.avatarUrl ? (
                 <img
                   src={child.avatarUrl}
@@ -98,7 +98,7 @@ export default async function ChildDetailPage({
             </div>
             <Link
               href={`/children/${params.id}/edit`}
-              className="text-gray-400 hover:text-blue-600 transition-colors"
+              className="text-gray-400 hover:text-brand-600 transition-colors"
               title="编辑资料"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -141,7 +141,7 @@ export default async function ChildDetailPage({
                 <h2 className="text-lg font-semibold text-gray-800">发展领域分布</h2>
                 <Link
                   href={`/children/${child.id}/insights`}
-                  className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all text-sm font-medium"
+                  className="px-4 py-2 bg-gradient-to-r from-accent-500 to-brand-500 text-white rounded-lg hover:from-accent-600 hover:to-brand-600 transition-all text-sm font-medium"
                 >
                   📊 查看洞察
                 </Link>
@@ -152,7 +152,7 @@ export default async function ChildDetailPage({
                   return (
                     <div
                       key={cat.value}
-                      className="text-center p-3 bg-gray-50 rounded-lg hover:bg-blue-50 transition-colors cursor-pointer"
+                      className="text-center p-3 bg-gray-50 rounded-lg hover:bg-brand-50 transition-colors cursor-pointer"
                     >
                       <div className="text-2xl mb-1">{cat.icon}</div>
                       <p className="text-xs text-gray-600">{cat.label}</p>
@@ -166,7 +166,7 @@ export default async function ChildDetailPage({
             {/* AI 洞察卡片 */}
             <Link
               href={`/children/${child.id}/insights`}
-              className="block bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl border border-purple-100 p-6 hover:shadow-md transition-all"
+              className="block bg-gradient-to-br from-accent-50 to-brand-50 rounded-xl border border-accent-100 p-6 hover:shadow-md transition-all"
             >
               <div className="flex items-center gap-3 mb-3">
                 <span className="text-3xl">✨</span>
@@ -193,13 +193,13 @@ export default async function ChildDetailPage({
             <div className="flex gap-2">
               <Link
                 href={`/children/${child.id}/photo-record`}
-                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm"
+                className="px-4 py-2 bg-accent-500 text-white rounded-lg hover:bg-accent-600 transition-colors text-sm"
               >
                 📷 拍照
               </Link>
               <Link
                 href={`/children/${child.id}/record`}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                className="px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-colors text-sm"
               >
                 ✏️ 文字
               </Link>
@@ -273,7 +273,7 @@ export default async function ChildDetailPage({
 
                         {/* 里程碑标签 */}
                         {record.milestones && (
-                          <div className="inline-block px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-md mb-3">
+                          <div className="inline-block px-3 py-1 bg-brand-100 text-blue-800 text-sm rounded-md mb-3">
                             🏆 {record.milestones}
                           </div>
                         )}
@@ -300,7 +300,7 @@ export default async function ChildDetailPage({
                       {/* 编辑按钮 */}
                       <Link
                         href={`/children/${params.id}/records/${record.id}/edit`}
-                        className="text-gray-400 hover:text-blue-600 transition-colors p-2"
+                        className="text-gray-400 hover:text-brand-600 transition-colors p-2"
                         title="编辑记录"
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -49,8 +49,8 @@ export default async function EditChildPage({
       </header>
 
       <main className="max-w-2xl mx-auto px-4 py-8">
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-          <p className="text-sm text-blue-800">
+        <div className="bg-brand-50 border border-brand-200 rounded-lg p-4 mb-6">
+          <p className="text-sm text-brand-700">
             💡 <strong>提示：</strong>
             修改出生日期会影响所有记录的月龄计算，但不会重新生成心理学分析。
           </p>
@@ -76,7 +76,7 @@ export default async function EditChildPage({
               name="name"
               required
               defaultValue={child.name}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-400 focus:border-brand-400 outline-none transition-all"
               placeholder="例如：小明"
             />
           </div>
@@ -91,7 +91,7 @@ export default async function EditChildPage({
               name="birthDate"
               required
               defaultValue={new Date(child.birthDate).toISOString().split('T')[0]}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-400 focus:border-brand-400 outline-none transition-all"
             />
             <p className="mt-1 text-xs text-amber-600">
               ⚠️ 修改出生日期会重新计算所有记录的月龄
@@ -110,7 +110,7 @@ export default async function EditChildPage({
                   value="male"
                   required
                   defaultChecked={child.gender === 'male'}
-                  className="w-4 h-4 text-blue-600"
+                  className="w-4 h-4 text-brand-500"
                 />
                 <span>男孩 👦</span>
               </label>
@@ -121,7 +121,7 @@ export default async function EditChildPage({
                   value="female"
                   required
                   defaultChecked={child.gender === 'female'}
-                  className="w-4 h-4 text-blue-600"
+                  className="w-4 h-4 text-brand-500"
                 />
                 <span>女孩 👧</span>
               </label>
@@ -141,7 +141,7 @@ export default async function EditChildPage({
           <div className="flex gap-3 pt-4">
             <button
               type="submit"
-              className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              className="flex-1 px-6 py-3 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-colors font-medium"
             >
               保存修改
             </button>

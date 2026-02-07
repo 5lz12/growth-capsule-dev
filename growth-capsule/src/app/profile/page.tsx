@@ -29,16 +29,13 @@ export default async function ProfilePage() {
   )
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <div className="min-h-screen">
       <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              🏠 我的家庭
+            <h1 className="text-xl font-bold text-gray-800">
+              家庭档案
             </h1>
-            <Link href="/" className="text-blue-600 hover:text-blue-700 text-sm">
-              ← 返回首页
-            </Link>
           </div>
         </div>
       </header>
@@ -66,7 +63,7 @@ export default async function ProfilePage() {
             </p>
             <Link
               href="/children/new"
-              className="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="inline-block px-6 py-3 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-colors"
             >
               添加孩子
             </Link>
@@ -94,11 +91,11 @@ export default async function ProfilePage() {
                   <Link
                     key={child.id}
                     href={`/children/${child.id}`}
-                    className="block bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md hover:border-blue-200 transition-all"
+                    className="block bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md hover:border-brand-200 transition-all"
                   >
                     <div className="flex items-start gap-4">
                       {/* 头像 */}
-                      <div className="w-20 h-20 rounded-full overflow-hidden bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center flex-shrink-0 border-2 border-white shadow">
+                      <div className="w-20 h-20 rounded-full overflow-hidden bg-gradient-to-br from-brand-100 to-accent-100 flex items-center justify-center flex-shrink-0 border-2 border-white shadow">
                         {child.avatarUrl ? (
                           <img
                             src={child.avatarUrl}
@@ -117,12 +114,12 @@ export default async function ProfilePage() {
                         </div>
 
                         <div className="grid grid-cols-3 gap-4 text-center mb-3">
-                          <div className="bg-blue-50 rounded-lg p-2">
-                            <p className="text-lg font-bold text-blue-600">{child.records.length}</p>
+                          <div className="bg-brand-50 rounded-lg p-2">
+                            <p className="text-lg font-bold text-brand-600">{child.records.length}</p>
                             <p className="text-xs text-gray-600">成长瞬间</p>
                           </div>
-                          <div className="bg-purple-50 rounded-lg p-2">
-                            <p className="text-lg font-bold text-purple-600">{explorationThemes}</p>
+                          <div className="bg-accent-50 rounded-lg p-2">
+                            <p className="text-lg font-bold text-accent-600">{explorationThemes}</p>
                             <p className="text-xs text-gray-600">探索主题</p>
                           </div>
                           <div className="bg-pink-50 rounded-lg p-2">
@@ -146,26 +143,26 @@ export default async function ProfilePage() {
 
             <Link
               href="/children/new"
-              className="block bg-white rounded-xl shadow-sm border border-dashed border-gray-300 p-6 hover:border-blue-400 hover:bg-blue-50 transition-all text-center"
+              className="block bg-white rounded-xl shadow-sm border border-dashed border-gray-300 p-6 hover:border-brand-400 hover:bg-brand-50 transition-all text-center"
             >
               <div className="text-3xl mb-2">➕</div>
               <p className="text-gray-600">添加孩子</p>
             </Link>
 
-            <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl border border-purple-100 p-6">
-              <h3 className="text-lg font-bold text-purple-900 mb-4">📊 成长概览</h3>
+            <div className="bg-gradient-to-br from-accent-50 to-brand-50 rounded-xl border border-accent-100 p-6">
+              <h3 className="text-lg font-bold text-accent-600 mb-4">📊 成长概览</h3>
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div>
-                  <p className="text-2xl font-bold text-purple-600">{children.length}</p>
-                  <p className="text-xs text-purple-700">孩子</p>
+                  <p className="text-2xl font-bold text-accent-600">{children.length}</p>
+                  <p className="text-xs text-accent-600">孩子</p>
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-purple-600">{totalRecords}</p>
-                  <p className="text-xs text-purple-700">成长瞬间</p>
+                  <p className="text-2xl font-bold text-accent-600">{totalRecords}</p>
+                  <p className="text-xs text-accent-600">成长瞬间</p>
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-purple-600">{totalExplorationThemes}</p>
-                  <p className="text-xs text-purple-700">探索领域</p>
+                  <p className="text-2xl font-bold text-accent-600">{totalExplorationThemes}</p>
+                  <p className="text-xs text-accent-600">探索领域</p>
                 </div>
               </div>
             </div>
@@ -241,9 +238,9 @@ export default async function ProfilePage() {
               </div>
             </div>
 
-            <div className="bg-blue-50 rounded-xl border border-blue-100 p-6">
-              <h3 className="text-sm font-bold text-blue-900 mb-2">💡 关于成长时间胶囊</h3>
-              <p className="text-xs text-blue-700 leading-relaxed">
+            <div className="bg-brand-50 rounded-xl border border-brand-100 p-6">
+              <h3 className="text-sm font-bold text-brand-700 mb-2">💡 关于成长时间胶囊</h3>
+              <p className="text-xs text-brand-700 leading-relaxed">
                 成长时间胶囊是一个基于发展心理学的成长记录工具，
                 帮助父母低负担记录孩子的成长瞬间，并通过 AI 将零散记录转化为结构化、可理解、可回顾的成长洞察。
                 我们的使命是让每个孩子的成长都被看见和理解。

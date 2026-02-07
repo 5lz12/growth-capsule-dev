@@ -22,29 +22,37 @@ export default async function HomePage() {
     .flatMap(child => child.records.map(r => ({ ...r, childName: child.name, childId: child.id })))
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]
 
+  // 获取最近带图片的记录（用于"最近瞬间"画廊）
+  const recentPhotos = children
+    .flatMap(child => child.records.map(r => ({ ...r, childName: child.name, childId: child.id })))
+    .filter(r => r.imageUrl)
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 10)
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <div className="min-h-screen">
       {/* 顶部导航 */}
       <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-brand-500 to-brand-600 bg-clip-text text-transparent">
             🌱 成长时间胶囊
           </h1>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-3">
             {children.length > 0 && (
-              <Link
-                href="/children/new"
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
-              >
-                + 添加孩子
-              </Link>
+              <>
+                <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors relative">
+                  <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                  </svg>
+                </button>
+                <Link
+                  href="/children/new"
+                  className="px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-colors text-sm"
+                >
+                  + 添加孩子
+                </Link>
+              </>
             )}
-            <Link
-              href="/profile"
-              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
-            >
-              🏠 我的
-            </Link>
           </div>
         </div>
       </header>
@@ -62,7 +70,7 @@ export default async function HomePage() {
             </p>
             <Link
               href="/children/new"
-              className="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="inline-block px-6 py-3 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-colors"
             >
               添加孩子
             </Link>
@@ -74,8 +82,11 @@ export default async function HomePage() {
               <h2 className="text-2xl font-bold text-gray-800 mb-2">
                 {getGreeting()}
               </h2>
-              <p className="text-gray-600">
-                每个孩子的成长都值得被看见。记录瞬间，发现意义。
+              <p className="text-gray-600 mb-1">
+                记下这一刻，理解可以慢慢来
+              </p>
+              <p className="text-sm text-gray-500">
+                每个孩子的成长都值得被看见
               </p>
               <div className="mt-4 flex items-center gap-4 text-sm text-gray-500">
                 <div className="flex items-center gap-1">
@@ -89,12 +100,36 @@ export default async function HomePage() {
               </div>
             </div>
 
-            {/* 2. 最新成长发现（AI深度洞察） */}
+            {/* 2. 最近瞬间（横向图片画廊） */}
+            {recentPhotos.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                  最近瞬间
+                </h3>
+                <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+                  {recentPhotos.map((photo) => (
+                    <Link
+                      key={photo.id}
+                      href={`/children/${photo.childId}#record-${photo.id}`}
+                      className="flex-shrink-0 w-32 h-32 rounded-xl overflow-hidden border-2 border-gray-100 hover:border-brand-300 transition-all shadow-sm hover:shadow-md"
+                    >
+                      <img
+                        src={photo.imageUrl!}
+                        alt={photo.behavior}
+                        className="w-full h-full object-cover"
+                      />
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 3. 最新成长发现（AI深度洞察） */}
             {latestRecord && (
-              <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-2xl border border-purple-100 p-6">
+              <div className="bg-gradient-to-br from-accent-50 to-brand-50 rounded-2xl border border-accent-100 p-6">
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-2xl">✨</span>
-                  <span className="text-sm font-semibold text-purple-700">AI 深度洞察</span>
+                  <span className="text-sm font-semibold text-accent-600">AI 深度洞察</span>
                 </div>
                 <p className="text-gray-700 mb-4">
                   在 {latestRecord.childName} {formatAge(latestRecord.ageInMonths)}时，
@@ -103,14 +138,14 @@ export default async function HomePage() {
                 </p>
                 <Link
                   href={`/children/${latestRecord.childId}`}
-                  className="inline-flex items-center gap-1 text-sm text-purple-600 hover:text-purple-700 font-medium"
+                  className="inline-flex items-center gap-1 text-sm text-accent-600 hover:text-accent-500 font-medium"
                 >
                   查看完整解读 →
                 </Link>
               </div>
             )}
 
-            {/* 3. 快捷记录入口 */}
+            {/* 4. 快捷记录入口 */}
             <div>
               <h3 className="text-lg font-semibold text-gray-800 mb-4">
                 快速记录
@@ -118,10 +153,10 @@ export default async function HomePage() {
               <div className="grid grid-cols-2 gap-4">
                 <Link
                   href={`/children/${children[0].id}/record`}
-                  className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md hover:border-blue-200 transition-all group"
+                  className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md hover:border-brand-200 transition-all group"
                 >
                   <div className="text-3xl mb-3">✏️</div>
-                  <p className="font-semibold text-gray-800 group-hover:text-blue-600 transition-colors">
+                  <p className="font-semibold text-gray-800 group-hover:text-brand-600 transition-colors">
                     文字记录
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
@@ -131,10 +166,10 @@ export default async function HomePage() {
 
                 <Link
                   href={`/children/${children[0].id}/photo-record`}
-                  className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md hover:border-blue-200 transition-all group"
+                  className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md hover:border-brand-200 transition-all group"
                 >
                   <div className="text-3xl mb-3">📸</div>
-                  <p className="font-semibold text-gray-800 group-hover:text-blue-600 transition-colors">
+                  <p className="font-semibold text-gray-800 group-hover:text-brand-600 transition-colors">
                     拍照记录
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
@@ -164,7 +199,7 @@ export default async function HomePage() {
               </div>
             </div>
 
-            {/* 4. 我的孩子 */}
+            {/* 5. 我的孩子 */}
             <div>
               <h3 className="text-lg font-semibold text-gray-800 mb-4">
                 我的孩子
@@ -180,7 +215,7 @@ export default async function HomePage() {
                     <Link
                       key={child.id}
                       href={`/children/${child.id}`}
-                      className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md hover:border-blue-200 transition-all"
+                      className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md hover:border-brand-200 transition-all"
                     >
                       <div className="flex items-center justify-between mb-3">
                         <div>
@@ -192,7 +227,7 @@ export default async function HomePage() {
                           </p>
                         </div>
                         <div className="text-right">
-                          <p className="text-2xl font-bold text-blue-600">
+                          <p className="text-2xl font-bold text-brand-600">
                             {child.records.length}
                           </p>
                           <p className="text-xs text-gray-500">条记录</p>

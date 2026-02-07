@@ -27,8 +27,8 @@ export default async function PhotoRecordPage({
 
       <main className="max-w-2xl mx-auto px-4 py-8">
         {/* 提示卡片 */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-          <p className="text-sm text-blue-800">
+        <div className="bg-brand-50 border border-brand-200 rounded-lg p-4 mb-6">
+          <p className="text-sm text-brand-700">
             💡 <strong>温馨提示：</strong>
             拍照记录可以捕捉珍贵的成长瞬间。同时添加行为描述和情境说明，可以获得更准确的心理分析。
           </p>

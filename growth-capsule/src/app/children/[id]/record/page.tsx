@@ -80,8 +80,8 @@ export default async function RecordPage({ params }: { params: { id: string } })
 
       <main className="max-w-2xl mx-auto px-4 py-8">
         {/* 提示卡片 */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-          <p className="text-sm text-blue-800">
+        <div className="bg-brand-50 border border-brand-200 rounded-lg p-4 mb-6">
+          <p className="text-sm text-brand-700">
             💡 <strong>温馨提示：</strong>
             记录越详细，分析越准确。建议描述行为的情境、持续时间、孩子反应等细节。
           </p>
@@ -96,7 +96,7 @@ export default async function RecordPage({ params }: { params: { id: string } })
               id="category"
               name="category"
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-400 focus:border-brand-400 outline-none transition-all"
             >
               <option value="">请选择类别</option>
               {BEHAVIOR_CATEGORIES.map((cat) => (
@@ -116,7 +116,7 @@ export default async function RecordPage({ params }: { params: { id: string } })
               name="behavior"
               required
               rows={3}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all resize-none"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-400 focus:border-brand-400 outline-none transition-all resize-none"
               placeholder="例如：今天第一次独立站起来，扶着沙发走了几步"
             />
             <p className="mt-1 text-xs text-gray-500">
@@ -134,7 +134,7 @@ export default async function RecordPage({ params }: { params: { id: string } })
               name="date"
               required
               defaultValue={new Date().toISOString().split('T')[0]}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-400 focus:border-brand-400 outline-none transition-all"
             />
           </div>
 
@@ -146,7 +146,7 @@ export default async function RecordPage({ params }: { params: { id: string } })
               id="notes"
               name="notes"
               rows={2}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all resize-none"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-400 focus:border-brand-400 outline-none transition-all resize-none"
               placeholder="例如：是在客厅玩的时候发生的，当时很开心，持续了约10分钟"
             />
             <p className="mt-1 text-xs text-gray-500">
@@ -166,7 +166,7 @@ export default async function RecordPage({ params }: { params: { id: string } })
           <div className="flex gap-3 pt-4">
             <button
               type="submit"
-              className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              className="flex-1 px-6 py-3 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-colors font-medium"
             >
               保存并分析
             </button>
