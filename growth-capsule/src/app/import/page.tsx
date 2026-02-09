@@ -38,7 +38,7 @@ export default function ImportPage() {
       // Load children
       const childrenRes = await fetch('/api/children')
       const childrenData = await childrenRes.json()
-      setChildren(childrenData)
+      setChildren(childrenData.data || [])
 
       // Load Day One exports
       const importsRes = await fetch('/api/import')
@@ -85,6 +85,7 @@ export default function ImportPage() {
 
       let totalImported = 0
       let totalSkipped = 0
+      let totalImages = 0
       let hasErrors = false
 
       for (const res of results) {
@@ -92,6 +93,7 @@ export default function ImportPage() {
         if (data.success) {
           totalImported += data.data.imported
           totalSkipped += data.data.skipped
+          totalImages += data.data.imagesImported || 0
         } else {
           hasErrors = true
         }
@@ -102,7 +104,7 @@ export default function ImportPage() {
       } else {
         setMessage({
           type: 'success',
-          text: `成功导入 ${totalImported} 条记录${totalSkipped > 0 ? `，跳过 ${totalSkipped} 条重复记录` : ''}`,
+          text: `成功导入 ${totalImported} 条记录${totalImages > 0 ? `（含 ${totalImages} 张图片）` : ''}${totalSkipped > 0 ? `，跳过 ${totalSkipped} 条重复记录` : ''}`,
         })
 
         // Redirect after successful import
