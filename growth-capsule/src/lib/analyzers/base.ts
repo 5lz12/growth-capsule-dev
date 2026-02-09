@@ -35,6 +35,9 @@ export interface GrowthAnalysisInput {
   behavior: string // 行为描述
   context?: string // 上下文信息
   category: string // 行为类别
+  childName?: string // 孩子名字
+  ageDescription?: string // 人类可读年龄（如 "8岁4个月"）
+  developmentStage?: string // 预计算的发展阶段（如 "学龄初期/小学低年级"）
 }
 
 export interface GrowthAnalysisOutput {

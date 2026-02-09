@@ -352,7 +352,10 @@ export class LocalAnalyzer implements Analyzer {
     if (ageInMonths <= 12) return '婴儿晚期（6-12个月）'
     if (ageInMonths <= 24) return '幼儿早期（12-24个月）'
     if (ageInMonths <= 36) return '幼儿晚期（24-36个月）'
-    return '学龄前期（36个月以上）'
+    if (ageInMonths <= 72) return '学龄前期（3-6岁）'
+    if (ageInMonths <= 108) return '学龄初期/小学低年级（6-9岁）'
+    if (ageInMonths <= 144) return '学龄中期/小学高年级（9-12岁）'
+    return '青少年期（12岁以上）'
   }
 
   private getCategoryLabel(category: string): string {
