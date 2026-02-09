@@ -7,15 +7,26 @@ datasource db {
   url      = "file:./growth-capsule.db"
 }
 
+model User {
+  uid         String   @id
+  status      String   @default("active") // active | deleted
+  externalIds String?  // JSON: { openid: "...", unionid: "..." }
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
 model Child {
   id         String   @id @default(cuid())
   name       String
   birthDate  DateTime
   gender     String
   avatarUrl  String?  // 头像图片URL
+  ownerUid   String   @default("uid_default_local")
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   records    Record[]
+
+  @@index([ownerUid])
 }
 
 model Record {
@@ -31,11 +42,13 @@ model Record {
   milestones  String? // 对应的发展里程碑
   imageUrl    String? // 图片URL
   isFavorite  Boolean  @default(false) // 是否收藏
+  ownerUid    String   @default("uid_default_local")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   @@index([childId, date])
   @@index([childId, isFavorite])
+  @@index([ownerUid])
 }
 
 model AnalysisRule {

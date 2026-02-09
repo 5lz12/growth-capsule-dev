@@ -4,16 +4,19 @@ import { join } from 'path'
 import { existsSync } from 'fs'
 import prisma from '@/lib/prisma'
 import { analyzerManager } from '@/lib/analyzers/analyzer-manager'
+import { getCurrentUid, checkOwnership, getUserUploadDir, getUserUploadUrl } from '@/lib/auth'
 
 /**
  * PUT /api/records/[id]
- * 更新记录（支持图片上传和删除）
+ * 更新记录（支持图片上传和删除，含权限校验）
  */
 export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
+    const uid = getCurrentUid(request)
+
     const record = await prisma.record.findUnique({
       where: { id: params.id },
       include: { child: true },
@@ -25,6 +28,10 @@ export async function PUT(
         error: 'Record not found',
       }, { status: 404 })
     }
+
+    // Ownership check (via record's ownerUid)
+    const denied = checkOwnership(record.ownerUid, uid)
+    if (denied) return denied
 
     const formData = await request.formData()
     const category = formData.get('category') as string
@@ -54,7 +61,6 @@ export async function PUT(
 
     // 如果要删除图片
     if (removeImage && record.imageUrl) {
-      // 删除旧图片文件
       try {
         const oldImagePath = join(process.cwd(), 'public', record.imageUrl)
         await unlink(oldImagePath)
@@ -66,40 +72,29 @@ export async function PUT(
 
     // 如果上传了新图片
     if (imageFile) {
-      console.log('[Upload] Received image file:', imageFile.name, imageFile.size, 'bytes')
-
       // 删除旧图片文件（如果存在）
       if (record.imageUrl) {
         try {
           const oldImagePath = join(process.cwd(), 'public', record.imageUrl)
           await unlink(oldImagePath)
-          console.log('[Upload] Deleted old image:', oldImagePath)
         } catch (error) {
-          console.error('[Upload] Failed to delete old image:', error)
+          console.error('Failed to delete old image:', error)
         }
       }
 
-      // 确保上传目录存在
-      const uploadDir = join(process.cwd(), 'public/uploads/records')
-      if (!existsSync(uploadDir)) {
-        console.log('[Upload] Creating upload directory:', uploadDir)
-        await mkdir(uploadDir, { recursive: true })
-      }
+      // 确保上传目录存在（用户命名空间）
+      const uploadDir = getUserUploadDir(uid, 'records')
+      await mkdir(uploadDir, { recursive: true })
 
       // 保存新图片
       const bytes = await imageFile.arrayBuffer()
       const buffer = Buffer.from(bytes)
 
       const filename = `${Date.now()}-${imageFile.name.replace(/[^a-zA-Z0-9.]/g, '')}`
-      const filepath = join(process.cwd(), 'public/uploads/records', filename)
-
-      console.log('[Upload] Saving image to:', filepath)
+      const filepath = join(uploadDir, filename)
       await writeFile(filepath, buffer)
-      console.log('[Upload] Image saved successfully')
 
-      imageUrl = `/uploads/records/${filename}`
-    } else {
-      console.log('[Upload] No image file received')
+      imageUrl = getUserUploadUrl(uid, 'records', filename)
     }
 
     // 重新生成分析
@@ -145,13 +140,15 @@ export async function PUT(
 
 /**
  * DELETE /api/records/[id]
- * 删除记录
+ * 删除记录（含权限校验）
  */
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
+    const uid = getCurrentUid(request)
+
     const record = await prisma.record.findUnique({
       where: { id: params.id },
     })
@@ -162,6 +159,10 @@ export async function DELETE(
         error: 'Record not found',
       }, { status: 404 })
     }
+
+    // Ownership check
+    const denied = checkOwnership(record.ownerUid, uid)
+    if (denied) return denied
 
     // 删除图片文件（如果存在）
     if (record.imageUrl) {

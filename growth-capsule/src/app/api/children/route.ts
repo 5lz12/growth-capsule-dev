@@ -1,13 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
+import { getCurrentUid } from '@/lib/auth'
 
 /**
  * GET /api/children
- * 获取所有孩子列表
+ * 获取当前用户的所有孩子列表
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const uid = getCurrentUid(request)
+
     const children = await prisma.child.findMany({
+      where: { ownerUid: uid },
       include: {
         records: {
           orderBy: { date: 'desc' },
@@ -32,10 +36,11 @@ export async function GET() {
 
 /**
  * POST /api/children
- * 创建新孩子
+ * 创建新孩子（绑定当前用户）
  */
 export async function POST(request: NextRequest) {
   try {
+    const uid = getCurrentUid(request)
     const body = await request.json()
     const { name, birthDate, gender } = body
 
@@ -51,6 +56,7 @@ export async function POST(request: NextRequest) {
         name,
         birthDate: new Date(birthDate),
         gender,
+        ownerUid: uid,
       },
     })
 

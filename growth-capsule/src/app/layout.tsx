@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { BottomTabBar } from "@/components/BottomTabBar";
+import DevUidSwitcher from "@/components/DevUidSwitcher";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -15,6 +16,7 @@ export default function RootLayout({
   return (
     <html lang="zh-CN">
       <body className="antialiased min-h-screen bg-gradient-to-br from-orange-50 via-amber-50/30 to-white">
+        <DevUidSwitcher />
         <div className="pb-16">
           {children}
         </div>

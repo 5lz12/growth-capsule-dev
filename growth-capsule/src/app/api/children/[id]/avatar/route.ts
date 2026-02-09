@@ -1,14 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { writeFile, mkdir } from 'fs/promises'
-import { join } from 'path'
 import prisma from '@/lib/prisma'
+import { getCurrentUid, checkOwnership, getUserUploadDir, getUserUploadUrl } from '@/lib/auth'
 
 export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
+    const uid = getCurrentUid(request)
     const childId = params.id
+
+    // Verify child exists and belongs to current user
+    const child = await prisma.child.findUnique({ where: { id: childId } })
+    if (!child) {
+      return NextResponse.json({ error: '孩子不存在' }, { status: 404 })
+    }
+    const denied = checkOwnership(child.ownerUid, uid)
+    if (denied) return denied
+
     const formData = await request.formData()
     const file = formData.get('avatar') as File
 
@@ -42,22 +52,19 @@ export async function POST(
     const extension = file.name.split('.').pop()
     const filename = `${timestamp}-${randomString}.${extension}`
 
-    // 确保上传目录存在
-    const uploadsDir = join(process.cwd(), 'public', 'uploads', 'avatars')
-    try {
-      await mkdir(uploadsDir, { recursive: true })
-    } catch (error) {
-      // 目录可能已存在，忽略错误
-    }
+    // 确保上传目录存在（用户命名空间）
+    const uploadsDir = getUserUploadDir(uid, 'avatars')
+    await mkdir(uploadsDir, { recursive: true })
 
     // 保存文件
+    const { join } = require('path')
     const filepath = join(uploadsDir, filename)
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
     await writeFile(filepath, buffer)
 
     // 更新数据库
-    const avatarUrl = `/uploads/avatars/${filename}`
+    const avatarUrl = getUserUploadUrl(uid, 'avatars', filename)
     await prisma.child.update({
       where: { id: childId },
       data: { avatarUrl },

@@ -1,18 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { analyzerManager } from '@/lib/analyzers/analyzer-manager'
+import { formatAge, getDevelopmentStageLabel } from '@/lib/utils'
+import { getCurrentUid, checkOwnership } from '@/lib/auth'
 
 /**
  * GET /api/children/[id]/records
- * 获取孩子的所有记录
+ * 获取孩子的所有记录（含权限校验）
  */
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
+    const uid = getCurrentUid(request)
+
+    // Verify child belongs to current user
+    const child = await prisma.child.findUnique({ where: { id: params.id } })
+    if (!child) {
+      return NextResponse.json({ success: true, data: [], error: 'Child not found' })
+    }
+    const denied = checkOwnership(child.ownerUid, uid)
+    if (denied) return denied
+
     const records = await prisma.record.findMany({
-      where: { childId: params.id },
+      where: { childId: params.id, ownerUid: uid },
       orderBy: { date: 'desc' },
     })
 
@@ -51,13 +63,14 @@ export async function GET(
 
 /**
  * POST /api/children/[id]/records
- * 创建新记录（带自动分析）
+ * 创建新记录（带自动分析，含权限校验）
  */
 export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
+    const uid = getCurrentUid(request)
     const body = await request.json()
     const { category, behavior, date, notes } = body
 
@@ -81,6 +94,10 @@ export async function POST(
       })
     }
 
+    // Ownership check
+    const denied = checkOwnership(child.ownerUid, uid)
+    if (denied) return denied
+
     // 计算月龄
     const recordDate = new Date(date)
     const birthDate = new Date(child.birthDate)
@@ -95,38 +112,23 @@ export async function POST(
       behavior,
       context: notes,
       category,
+      childName: child.name,
+      ageDescription: formatAge(ageInMonths),
+      developmentStage: getDevelopmentStageLabel(ageInMonths),
     })
 
     // 将结构化分析数据序列化为 JSON 存储
     const structuredAnalysis = {
       developmentStage: analysisResult.developmentStage,
       psychologicalInterpretation: analysisResult.psychologicalInterpretation,
+      emotionalInterpretation: analysisResult.emotionalInterpretation,
       parentingSuggestions: analysisResult.parentingSuggestions,
       milestone: analysisResult.milestone,
       confidenceLevel: analysisResult.confidenceLevel,
       source: analysisResult.source,
     }
 
-    // 生成纯文本版本的分析（用于向后兼容显示）
-    const textAnalysis = [
-      `【发展阶段】${structuredAnalysis.developmentStage}`,
-      ``,
-      `【心理解读】${structuredAnalysis.psychologicalInterpretation}`,
-      structuredAnalysis.milestone ? `\n【里程碑】${structuredAnalysis.milestone}` : '',
-      ``,
-      `【养育建议】`,
-      ...structuredAnalysis.parentingSuggestions.map(s => {
-        const typeLabel = {
-          observe: '👁️ 持续观察',
-          emotional: '💙 情绪支持',
-          guidance: '🌱 适度引导',
-          none: '✅ 无需建议',
-        }[s.type]
-        return `${typeLabel}：${s.content}`
-      }),
-    ].filter(Boolean).join('\n')
-
-    // 创建记录
+    // 创建记录（存储结构化 JSON，绑定 ownerUid）
     const record = await prisma.record.create({
       data: {
         childId: params.id,
@@ -135,8 +137,9 @@ export async function POST(
         date: recordDate,
         ageInMonths,
         notes,
-        analysis: textAnalysis,
+        analysis: JSON.stringify(structuredAnalysis),
         milestones: analysisResult.milestone,
+        ownerUid: uid,
       },
     })
 

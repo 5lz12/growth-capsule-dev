@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { writeFile } from 'fs/promises'
+import { writeFile, mkdir } from 'fs/promises'
 import path from 'path'
+import { getCurrentUid, getUserUploadDir, getUserUploadUrl } from '@/lib/auth'
 
 export async function POST(request: NextRequest) {
   try {
+    const uid = getCurrentUid(request)
+
     const formData = await request.formData()
     const file = formData.get('file') as File
 
@@ -29,24 +32,25 @@ export async function POST(request: NextRequest) {
     // 生成唯一文件名
     const timestamp = Date.now()
     const random = Math.random().toString(36).substring(7)
-    const extension = file.name.split('.').pop()
+    const extension = file.name.split('.').pop() || 'jpg'
     const filename = `${timestamp}-${random}.${extension}`
 
-    // 确保上传目录存在
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads')
+    // 确保上传目录存在（用户命名空间）
+    const uploadDir = getUserUploadDir(uid, 'records')
+    await mkdir(uploadDir, { recursive: true })
     const filepath = path.join(uploadDir, filename)
 
     // 写入文件
     await writeFile(filepath, buffer)
 
     // 返回文件URL
-    const url = `/uploads/${filename}`
+    const url = getUserUploadUrl(uid, 'records', filename)
 
     return NextResponse.json({ url })
   } catch (error) {
     console.error('Upload error:', error)
     return NextResponse.json(
-      { error: 'Failed to upload file' },
+      { error: `Failed to upload file: ${error instanceof Error ? error.message : String(error)}` },
       { status: 500 }
     )
   }
