@@ -259,9 +259,11 @@ function formatDateGroup(dateKey: string): string {
   const target = new Date(date.getFullYear(), date.getMonth(), date.getDate())
   const diffDays = Math.floor((today.getTime() - target.getTime()) / (1000 * 60 * 60 * 24))
 
+  const year = date.getFullYear()
   const month = date.getMonth() + 1
   const day = date.getDate()
-  const dateStr = `${month}月${day}日`
+  const isThisYear = year === now.getFullYear()
+  const dateStr = isThisYear ? `${month}月${day}日` : `${year}年${month}月${day}日`
 
   if (diffDays === 0) return `${dateStr} · 今天`
   if (diffDays === 1) return `${dateStr} · 昨天`

@@ -11,14 +11,8 @@ export function formatAge(ageInMonths: number): string {
     return `${months}个月`
   }
 
-  if (years === 1) {
-    // 1岁阶段仍显示月数，便于精确观察发展
-    if (months === 0) return '1岁'
-    return `1岁${months}个月`
-  }
-
-  // 超过2岁只显示X岁
-  return `${years}岁`
+  if (months === 0) return `${years}岁`
+  return `${years}岁${months}个月`
 }
 
 /**
