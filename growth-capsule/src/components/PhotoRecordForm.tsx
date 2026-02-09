@@ -101,42 +101,29 @@ export function PhotoRecordForm({ childId }: PhotoRecordFormProps) {
       const blob = await response.blob()
       const file = new File([blob], 'photo.jpg', { type: 'image/jpeg' })
 
-      // 上传图片
-      const uploadFormData = new FormData()
-      uploadFormData.append('file', file)
+      // 一次性提交：图片文件 + 表单数据（通过 FormData）
+      const submitData = new FormData()
+      submitData.append('file', file)
+      submitData.append('category', formData.category)
+      submitData.append('behavior', formData.behavior)
+      submitData.append('date', formData.date)
+      submitData.append('notes', formData.notes || '')
 
-      const uploadRes = await fetch('/api/upload/image', {
-        method: 'POST',
-        body: uploadFormData,
-      })
-
-      if (!uploadRes.ok) {
-        throw new Error('图片上传失败')
-      }
-
-      const { url } = await uploadRes.json()
-
-      // 创建记录
       const createRes = await fetch(`/api/children/${childId}/record-with-image`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...formData,
-          imageUrl: url,
-        }),
+        body: submitData,
       })
 
       if (!createRes.ok) {
-        throw new Error('记录创建失败')
+        const createErr = await createRes.json().catch(() => ({}))
+        throw new Error(`记录创建失败: ${createErr.error || createRes.status}`)
       }
 
       router.push(`/children/${childId}`)
       router.refresh()
     } catch (error) {
       console.error('Error:', error)
-      alert('保存失败，请重试')
+      alert(error instanceof Error ? error.message : '保存失败，请重试')
     } finally {
       setIsUploading(false)
     }

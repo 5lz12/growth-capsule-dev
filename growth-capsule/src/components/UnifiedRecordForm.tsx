@@ -18,8 +18,10 @@ export function UnifiedRecordForm({ childId, childName }: UnifiedRecordFormProps
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isConverting, setIsConverting] = useState(false)
+  const [isListening, setIsListening] = useState(false)
   const [suggestedCategory, setSuggestedCategory] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const recognitionRef = useRef<any>(null)
 
   // 简单的分类建议逻辑（基于关键词）
   const suggestCategory = (text: string) => {
@@ -42,6 +44,63 @@ export function UnifiedRecordForm({ childId, childName }: UnifiedRecordFormProps
     }
 
     return null
+  }
+
+  const toggleVoiceInput = () => {
+    if (isListening) {
+      recognitionRef.current?.stop()
+      setIsListening(false)
+      return
+    }
+
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    if (!SpeechRecognition) {
+      alert('您的浏览器不支持语音识别，请使用 Chrome 或 Safari')
+      return
+    }
+
+    const recognition = new SpeechRecognition()
+    recognition.lang = 'zh-CN'
+    recognition.continuous = true
+    recognition.interimResults = true
+
+    recognition.onresult = (event: any) => {
+      let finalText = ''
+      let interimText = ''
+      for (let i = 0; i < event.results.length; i++) {
+        if (event.results[i].isFinal) {
+          finalText += event.results[i][0].transcript
+        } else {
+          interimText += event.results[i][0].transcript
+        }
+      }
+      // Store the pre-voice text so we can append final results to it
+      // The Speech API returns all results from the session, so we use
+      // the full final text directly (not appending to previous behavior)
+      const textBeforeVoice = recognitionRef.current?._textBeforeVoice ?? ''
+      const newText = textBeforeVoice + finalText + interimText
+      setBehavior(newText)
+      const suggested = suggestCategory(newText)
+      setSuggestedCategory(suggested)
+    }
+
+    recognition.onerror = (event: any) => {
+      console.error('Speech recognition error:', event.error)
+      if (event.error === 'not-allowed') {
+        alert('请允许麦克风权限以使用语音输入')
+      }
+      setIsListening(false)
+    }
+
+    recognition.onend = () => {
+      setIsListening(false)
+    }
+
+    recognitionRef.current = recognition
+    // Store the current behavior text so onresult can prepend it
+    recognition._textBeforeVoice = behavior
+    recognition.start()
+    setIsListening(true)
   }
 
   const handleBehaviorChange = (value: string) => {
@@ -268,14 +327,18 @@ export function UnifiedRecordForm({ childId, childName }: UnifiedRecordFormProps
               </svg>
             </label>
 
-            {/* 语音按钮（占位） */}
+            {/* 语音按钮 */}
             <button
               type="button"
-              className="p-2 rounded-lg opacity-40 cursor-not-allowed"
-              title="语音输入（即将上线）"
-              disabled
+              onClick={toggleVoiceInput}
+              className={`p-2 rounded-lg transition-colors ${
+                isListening
+                  ? 'bg-red-100 text-red-600 animate-pulse'
+                  : 'hover:bg-gray-200 text-gray-600'
+              }`}
+              title={isListening ? '点击停止录音' : '语音输入'}
             >
-              <svg className="w-6 h-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
               </svg>
             </button>

@@ -40,11 +40,6 @@ export default async function HomePage() {
           <div className="flex items-center gap-3">
             {children.length > 0 && (
               <>
-                <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors relative">
-                  <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                  </svg>
-                </button>
                 <Link
                   href="/children/new"
                   className="px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-colors text-sm"
@@ -177,25 +172,31 @@ export default async function HomePage() {
                   </p>
                 </Link>
 
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 opacity-60 cursor-not-allowed">
+                <Link
+                  href={`/children/${children[0].id}/voice-record`}
+                  className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md hover:border-brand-200 transition-all group"
+                >
                   <div className="text-3xl mb-3">🎤</div>
-                  <p className="font-semibold text-gray-800">
+                  <p className="font-semibold text-gray-800 group-hover:text-brand-600 transition-colors">
                     语音记录
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
-                    即将上线
+                    语音转文字，自动记录
                   </p>
-                </div>
+                </Link>
 
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 opacity-60 cursor-not-allowed">
+                <Link
+                  href={`/children/${children[0].id}/photo-record`}
+                  className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md hover:border-brand-200 transition-all group"
+                >
                   <div className="text-3xl mb-3">💭</div>
-                  <p className="font-semibold text-gray-800">
-                    情绪标记
+                  <p className="font-semibold text-gray-800 group-hover:text-brand-600 transition-colors">
+                    情绪记录
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
-                    即将上线
+                    记录孩子的情绪表现
                   </p>
-                </div>
+                </Link>
               </div>
             </div>
 

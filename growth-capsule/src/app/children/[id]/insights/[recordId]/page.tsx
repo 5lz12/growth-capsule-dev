@@ -4,6 +4,8 @@ import prisma from '@/lib/prisma'
 import { BEHAVIOR_CATEGORIES } from '@/types'
 import { formatAge } from '@/lib/utils'
 import { FavoriteButton } from '@/components/FavoriteButton'
+import { ShareButton } from '@/components/ShareButton'
+import { FeedbackButtons } from '@/components/FeedbackButtons'
 
 export default async function InsightDetailPage({
   params,
@@ -70,11 +72,10 @@ export default async function InsightDetailPage({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
               </svg>
             </Link>
-            <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors" title="分享">
-              <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-              </svg>
-            </button>
+            <ShareButton
+              title={`${child.name}的成长解读`}
+              text={`${record.behavior}\n\n${structuredAnalysis?.psychologicalInterpretation || record.analysis || ''}`}
+            />
             <FavoriteButton recordId={record.id} initialIsFavorite={record.isFavorite} />
           </div>
         </div>
@@ -285,19 +286,7 @@ export default async function InsightDetailPage({
             </div>
 
             {/* 反馈机制 */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 text-center">
-              <p className="text-gray-700 mb-4">这个解读对你有启发吗？</p>
-              <div className="flex justify-center gap-4">
-                <button className="flex items-center gap-2 px-6 py-3 bg-accent-50 hover:bg-accent-100 border border-accent-200 rounded-xl transition-colors">
-                  <span className="text-2xl">👍</span>
-                  <span className="text-sm font-medium text-accent-700">有帮助</span>
-                </button>
-                <button className="flex items-center gap-2 px-6 py-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-xl transition-colors">
-                  <span className="text-2xl">👎</span>
-                  <span className="text-sm font-medium text-gray-700">需要改进</span>
-                </button>
-              </div>
-            </div>
+            <FeedbackButtons recordId={record.id} />
 
             {/* 底部免责声明 */}
             <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">

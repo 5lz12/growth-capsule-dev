@@ -19,6 +19,8 @@ export function RecordEditForm({ child, record }: RecordEditFormProps) {
   const [imagePreview, setImagePreview] = useState<string | null>(record.imageUrl)
   const [removeImage, setRemoveImage] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [isConverting, setIsConverting] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -104,6 +106,27 @@ export function RecordEditForm({ child, record }: RecordEditFormProps) {
     setRemoveImage(true)
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
+    }
+  }
+
+  const handleDelete = async () => {
+    setIsDeleting(true)
+    try {
+      const response = await fetch(`/api/records/${record.id}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to delete record')
+      }
+
+      router.push(`/children/${child.id}`)
+      router.refresh()
+    } catch (error) {
+      console.error('Error deleting record:', error)
+      alert('删除失败，请重试')
+      setIsDeleting(false)
+      setShowDeleteConfirm(false)
     }
   }
 
@@ -308,6 +331,40 @@ export function RecordEditForm({ child, record }: RecordEditFormProps) {
           >
             取消
           </button>
+        </div>
+
+        {/* 删除区域 */}
+        <div className="px-6 py-4 border-t border-red-100">
+          {!showDeleteConfirm ? (
+            <button
+              type="button"
+              onClick={() => setShowDeleteConfirm(true)}
+              className="w-full px-6 py-3 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors text-sm font-medium"
+            >
+              🗑️ 删除这条记录
+            </button>
+          ) : (
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+              <p className="text-sm text-red-800 mb-3 font-medium">确定要删除这条记录吗？此操作无法撤销。</p>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                  className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm font-medium disabled:opacity-50"
+                >
+                  {isDeleting ? '删除中...' : '确认删除'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm"
+                >
+                  取消
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
