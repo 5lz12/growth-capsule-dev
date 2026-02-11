@@ -1,10 +1,12 @@
 import { redirect } from 'next/navigation'
 import prisma from '@/lib/prisma'
+import { getServerUid } from '@/lib/auth'
 
 export default function NewChildPage() {
   async function addChild(formData: FormData) {
     'use server'
 
+    const ownerUid = getServerUid()
     const name = formData.get('name') as string
     const birthDate = formData.get('birthDate') as string
     const gender = formData.get('gender') as string
@@ -18,6 +20,7 @@ export default function NewChildPage() {
         name,
         birthDate: new Date(birthDate),
         gender,
+        ownerUid,
       },
     })
 

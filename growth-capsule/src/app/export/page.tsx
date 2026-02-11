@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import prisma from '@/lib/prisma'
+import { getServerUid } from '@/lib/auth'
 import { ExportPreview } from './components/ExportPreview'
 
 export default async function ExportPage({
@@ -7,7 +8,10 @@ export default async function ExportPage({
 }: {
   searchParams: { childId?: string }
 }) {
+  const ownerUid = getServerUid()
+
   const children = await prisma.child.findMany({
+    where: { ownerUid },
     include: {
       records: {
         orderBy: { date: 'desc' },

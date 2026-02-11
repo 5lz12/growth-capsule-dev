@@ -38,8 +38,8 @@ export default function DevUidSwitcher() {
       if (data.success) {
         setCurrentUid(uid)
         setIsOpen(false)
-        // Reload to reflect new user data
-        window.location.reload()
+        // Navigate to homepage to reflect new user data
+        window.location.href = '/'
       }
     } catch (e) {
       console.error('Failed to switch uid:', e)

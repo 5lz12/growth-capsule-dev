@@ -1,9 +1,13 @@
 import Link from 'next/link'
 import prisma from '@/lib/prisma'
 import { formatAge } from '@/lib/utils'
+import { getServerUid } from '@/lib/auth'
 
 export default async function ProfilePage() {
+  const ownerUid = getServerUid()
+
   const children = await prisma.child.findMany({
+    where: { ownerUid },
     include: {
       records: {
         orderBy: { date: 'desc' },
@@ -13,9 +17,10 @@ export default async function ProfilePage() {
     orderBy: { createdAt: 'desc' },
   })
 
-  // 获取所有收藏的记录
+  // 获取当前用户的收藏记录
   const favoriteRecords = await prisma.record.findMany({
     where: {
+      ownerUid,
       isFavorite: true,
     },
     include: {
@@ -246,13 +251,13 @@ export default async function ProfilePage() {
               <h3 className="text-lg font-bold text-gray-800 mb-4">🛠️ 功能</h3>
               <div className="space-y-3">
                 <Link
-                  href="/children/new"
+                  href={`/children/${children[0].id}/edit`}
                   className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   <span className="text-2xl">👶</span>
                   <div className="flex-1">
                     <p className="font-medium text-gray-800">基本档案管理</p>
-                    <p className="text-xs text-gray-500">添加、编辑孩子信息</p>
+                    <p className="text-xs text-gray-500">编辑孩子信息</p>
                   </div>
                   <span className="text-gray-400">→</span>
                 </Link>

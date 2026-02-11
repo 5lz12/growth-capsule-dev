@@ -2,6 +2,7 @@ import Link from 'next/link'
 import prisma from '@/lib/prisma'
 import { BEHAVIOR_CATEGORIES } from '@/types'
 import { formatAge } from '@/lib/utils'
+import { getServerUid } from '@/lib/auth'
 import { InsightRadarChart } from '../children/[id]/insights/components/InsightRadarChart'
 
 type TimeRange = '1m' | '3m' | '6m' | 'all'
@@ -11,8 +12,11 @@ export default async function InsightsTopPage({
 }: {
   searchParams: { childId?: string; range?: TimeRange }
 }) {
-  // 获取所有孩子
+  const ownerUid = getServerUid()
+
+  // 获取当前用户的孩子
   const children = await prisma.child.findMany({
+    where: { ownerUid },
     orderBy: { createdAt: 'asc' },
   })
 

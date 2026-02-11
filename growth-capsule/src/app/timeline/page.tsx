@@ -2,6 +2,7 @@ import Link from 'next/link'
 import prisma from '@/lib/prisma'
 import { BEHAVIOR_CATEGORIES } from '@/types'
 import { formatAge } from '@/lib/utils'
+import { getServerUid } from '@/lib/auth'
 import { TimelineCategoryFilter } from './components/TimelineCategoryFilter'
 import { TimelineSearchBar } from '@/components/TimelineSearchBar'
 
@@ -10,8 +11,11 @@ export default async function TimelinePage({
 }: {
   searchParams: { childId?: string; category?: string; search?: string }
 }) {
-  // 获取所有孩子
+  const ownerUid = getServerUid()
+
+  // 获取当前用户的孩子
   const children = await prisma.child.findMany({
+    where: { ownerUid },
     orderBy: { createdAt: 'asc' },
   })
 

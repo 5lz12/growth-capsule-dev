@@ -1,10 +1,14 @@
 import Link from 'next/link'
 import prisma from '@/lib/prisma'
 import { formatAge } from '@/lib/utils'
+import { getServerUid } from '@/lib/auth'
 
 export default async function HomePage() {
-  // 获取所有孩子
+  const ownerUid = getServerUid()
+
+  // 获取当前用户的孩子
   const children = await prisma.child.findMany({
+    where: { ownerUid },
     include: {
       records: {
         orderBy: { date: 'desc' },

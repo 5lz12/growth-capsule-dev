@@ -112,30 +112,33 @@ export class LocalAnalyzer implements Analyzer {
         `以便更准确地了解发展情况。`
     }
 
+    const piagetStage = this.getPiagetStage(ageInMonths)
+    const eriksonStage = this.getEriksonStage(ageInMonths)
+
     // 基于 category 生成克制性解读，带有理论视角
     const interpretations: Record<string, string> = {
-      motor: `从皮亚杰认知发展理论来看，运动能力的发展是儿童认知发展的基础。${ageDesc}的当前表现，` +
-        `反映了身体控制能力的发展状态。皮亚杰指出，"动作思维"是幼儿早期思维的主要形式，` +
-        `运动能力的发展直接推动着认知能力的发展。每个孩子的发展路径不同，重要的是提供安全的环境让孩子自由探索。`,
+      motor: `从皮亚杰认知发展理论来看，运动能力的发展是儿童认知发展的基础。${ageDesc}当前正处于皮亚杰的${piagetStage}，` +
+        `运动能力的发展反映了身体控制能力和认知能力的协同成长。` +
+        `每个孩子的发展路径不同，重要的是提供安全的环境让孩子自由探索。`,
 
       language: `根据维果茨基的社会文化理论，语言发展本质上是一个社会互动的过程。${ageDesc}正在以自己的节奏积累语言经验。` +
         `维果茨基强调，成人通过"支架式"的语言输入和对话，可以推动孩子进入"最近发展区"。` +
         `持续的语言输入和交流是关键，但不必对特定时间点出现特定语言表现抱有过度期待。`,
 
-      social: `从鲍尔比的依恋理论视角来看，早期社交能力的发展与孩子建立的依恋关系质量密切相关。${ageDesc}的当前表现，` +
-        `是孩子与外界互动方式的一种体现。每个孩子都有不同的气质类型（如容易型、困难型、慢热型），` +
-        `这会影响他们的社交反应。尊重孩子的社交节奏，不必过度干预，让孩子按照自己的方式逐步建立社交信心。`,
+      social: `从鲍尔比的依恋理论视角来看，社交能力的发展与孩子建立的依恋关系质量密切相关。${ageDesc}的当前表现，` +
+        `是孩子与外界互动方式的一种体现。在埃里克森的${eriksonStage}，` +
+        `每个孩子都有不同的气质类型，这会影响他们的社交反应。尊重孩子的社交节奏，让孩子按照自己的方式逐步建立社交信心。`,
 
-      cognitive: `根据皮亚杰的认知发展阶段理论，${this.getDevelopmentStage(ageInMonths)}正处于感知运动阶段或前运算阶段。` +
-        `${ageDesc}正在通过不断的探索来构建对世界的认知图式。皮亚杰认为，` +
-        `"认识来源于动作，知识来源于动作"，孩子通过主动的探索和试错来理解世界的运作规律。保持好奇心比达到特定里程碑更重要。`,
+      cognitive: `根据皮亚杰的认知发展阶段理论，${ageDesc}正处于${piagetStage}。` +
+        `这一阶段的孩子正在通过不断的探索来构建对世界的认知图式。` +
+        `孩子通过主动的探索和试错来理解世界的运作规律，保持好奇心比达到特定里程碑更重要。`,
 
-      emotional: `从埃里克森的心理社会发展理论来看，${ageDesc}正在完成特定的心理社会发展任务。` +
-        `此时表现出的情绪特点，反映了孩子当前的情感表达和调节能力。接纳和理解比快速"纠正"更重要，` +
-        `因为安全型的依恋关系是未来情感健康发展的基石。`,
+      emotional: `从埃里克森的心理社会发展理论来看，${ageDesc}正处于${eriksonStage}，` +
+        `正在完成这一阶段特定的心理社会发展任务。此时表现出的情绪特点，反映了孩子当前的情感表达和调节能力。` +
+        `接纳和理解比快速"纠正"更重要，因为安全型的依恋关系是未来情感健康发展的基石。`,
     }
 
-    return interpretations[category] || `${this.getDevelopmentStage(ageInMonths)}的孩子在 ${this.getCategoryLabel(category)} 方面的发展记录。`
+    return interpretations[category] || `${ageDesc}正处于${this.getDevelopmentStage(ageInMonths)}，在${this.getCategoryLabel(category)}方面的发展值得持续关注。`
   }
 
   /**
@@ -356,6 +359,27 @@ export class LocalAnalyzer implements Analyzer {
     if (ageInMonths <= 108) return '学龄初期/小学低年级（6-9岁）'
     if (ageInMonths <= 144) return '学龄中期/小学高年级（9-12岁）'
     return '青少年期（12岁以上）'
+  }
+
+  /**
+   * 皮亚杰认知发展阶段
+   */
+  private getPiagetStage(ageInMonths: number): string {
+    if (ageInMonths <= 24) return '感知运动阶段（0-2岁）'
+    if (ageInMonths <= 84) return '前运算阶段（2-7岁）'
+    if (ageInMonths <= 132) return '具体运算阶段（7-11岁）'
+    return '形式运算阶段（11岁以上）'
+  }
+
+  /**
+   * 埃里克森心理社会发展阶段
+   */
+  private getEriksonStage(ageInMonths: number): string {
+    if (ageInMonths <= 12) return '信任 vs 不信任阶段（0-1岁）'
+    if (ageInMonths <= 36) return '自主 vs 羞愧/怀疑阶段（1-3岁）'
+    if (ageInMonths <= 72) return '主动 vs 内疚阶段（3-6岁）'
+    if (ageInMonths <= 144) return '勤奋 vs 自卑阶段（6-12岁）'
+    return '自我认同 vs 角色混淆阶段（12-18岁）'
   }
 
   private getCategoryLabel(category: string): string {

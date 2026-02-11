@@ -1,6 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 
 export const DEFAULT_UID = 'uid_default_local'
+
+/**
+ * Get the current user's UID in Server Components.
+ * Reads from cookies (set by DevUidSwitcher) or falls back to env / default.
+ */
+export function getServerUid(): string {
+  try {
+    const cookieStore = cookies()
+    const cookieUid = cookieStore.get('dev-uid')?.value
+    if (cookieUid && cookieUid.trim()) {
+      return cookieUid.trim()
+    }
+  } catch {
+    // cookies() may throw outside of request context
+  }
+
+  if (process.env.DEV_DEFAULT_UID) {
+    return process.env.DEV_DEFAULT_UID
+  }
+
+  return DEFAULT_UID
+}
 
 /**
  * Get the current user's UID from the request context.
