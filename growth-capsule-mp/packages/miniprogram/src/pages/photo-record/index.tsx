@@ -3,8 +3,16 @@ import { View, Text, Button, Image, Input, Textarea } from '@tarojs/components'
 import Taro, { useRouter, useLoad, chooseImage } from '@tarojs/taro'
 import { childrenApi, Child } from '../../api/children'
 import { recordsApi } from '../../api/records'
-import { BEHAVIOR_CATEGORIES } from '../../types'
 import './index.scss'
+
+// 行为类别常量
+const BEHAVIOR_CATEGORIES = [
+  { value: 'motor', label: '运动发展', icon: '🏃' },
+  { value: 'language', label: '语言发展', icon: '🗣️' },
+  { value: 'social', label: '社交能力', icon: '👥' },
+  { value: 'cognitive', label: '认知发展', icon: '🧠' },
+  { value: 'emotional', label: '情感发展', icon: '❤️' },
+] as const
 
 export default function PhotoRecordPage() {
   const router = useRouter()

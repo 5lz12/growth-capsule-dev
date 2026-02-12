@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { View, Text } from '@tarojs/components'
 import Taro from '@tarojs/taro'
-import { request } from '../../api/client'
 import './index.scss'
 
 interface FeedbackButtonsProps {
@@ -19,14 +18,15 @@ export default function FeedbackButtons({ recordId }: FeedbackButtonsProps) {
 
     try {
       setLoading(true)
-      await request({
-        url: '/api/feedback',
-        method: 'POST',
-        data: {
-          recordId,
-          type,
-        },
-      })
+      // TODO: 实现反馈API后启用
+      // await request({
+      //   url: '/api/feedback',
+      //   method: 'POST',
+      //   data: {
+      //     recordId,
+      //     type,
+      //   },
+      // })
       setFeedback(type)
       Taro.showToast({
         title: '感谢反馈！',

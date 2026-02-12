@@ -2,10 +2,18 @@ import { useState, useEffect } from 'react'
 import { View, Text, Image, ScrollView } from '@tarojs/components'
 import Taro, { useRouter, useShareAppMessage, useShareTimeline } from '@tarojs/taro'
 import { recordsApi, Record } from '../../api/records'
-import { BEHAVIOR_CATEGORIES } from '../../types'
 import { FavoriteButton } from '../../components/FavoriteButton'
 import { FeedbackButtons } from '../../components/FeedbackButtons'
 import './index.scss'
+
+// 行为类别常量
+const BEHAVIOR_CATEGORIES = [
+  { value: 'motor', label: '运动发展', icon: '🏃' },
+  { value: 'language', label: '语言发展', icon: '🗣️' },
+  { value: 'social', label: '社交能力', icon: '👥' },
+  { value: 'cognitive', label: '认知发展', icon: '🧠' },
+  { value: 'emotional', label: '情感发展', icon: '❤️' },
+] as const
 
 export default function RecordDetailPage() {
   const router = useRouter()
