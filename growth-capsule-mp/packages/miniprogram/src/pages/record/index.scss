@@ -1,0 +1,154 @@
+.record-page {
+  min-height: 100vh;
+  background: #f8fafc;
+
+  .loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+  }
+}
+
+.record-header {
+  padding: 24px 16px;
+  text-align: center;
+  background: linear-gradient(135deg, #dbeafe, #ffffff);
+
+  .header-title {
+    font-size: 22px;
+    font-weight: bold;
+    color: #1f2937;
+  }
+
+  .header-subtitle {
+    font-size: 13px;
+    color: #6b7280;
+    margin-top: 4px;
+  }
+}
+
+.record-container {
+  padding: 16px;
+}
+
+.child-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: white;
+  border-radius: 16px;
+  margin-bottom: 24px;
+
+  .child-name {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1f2937;
+  }
+
+  .child-age {
+    font-size: 14px;
+    color: #6b7280;
+  }
+}
+
+.form-section {
+  margin-bottom: 20px;
+}
+
+.form-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.form-textarea {
+  width: 100%;
+  min-height: 100px;
+  padding: 14px 16px;
+  background: white;
+  border-radius: 12px;
+  font-size: 16px;
+  border: 1px solid #e5e7eb;
+  line-height: 1.6;
+
+  &:focus {
+    border-color: #f97316;
+    outline: none;
+  }
+}
+
+.char-count {
+  display: block;
+  text-align: right;
+  font-size: 12px;
+  color: #9ca3af;
+  margin-top: 4px;
+}
+
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+}
+
+.category-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 8px;
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  transition: all 0.2s;
+
+  &:active {
+    opacity: 0.7;
+  }
+
+  &.category-item-active {
+    background: #fff7ed;
+    border-color: #f97316;
+  }
+}
+
+.category-icon {
+  font-size: 22px;
+}
+
+.category-label {
+  font-size: 12px;
+  color: #374151;
+  text-align: center;
+}
+
+.submit-section {
+  margin-bottom: 32px;
+}
+
+.submit-btn {
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(135deg, #f97316, #ea580c);
+  border-radius: 12px;
+  text-align: center;
+  transition: opacity 0.2s;
+
+  &:active {
+    opacity: 0.8;
+  }
+
+  &.submit-btn-disabled {
+    opacity: 0.5;
+  }
+}
+
+.submit-btn-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+}

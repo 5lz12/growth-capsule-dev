@@ -10,6 +10,7 @@ export default defineAppConfig({
     'pages/voice-record/index',
     'pages/photo-record/index',
     'pages/record-detail/index',
+    'pages/record-edit/index',
     'pages/child-edit/index',
     'pages/guide/index',
     'pages/help/index',

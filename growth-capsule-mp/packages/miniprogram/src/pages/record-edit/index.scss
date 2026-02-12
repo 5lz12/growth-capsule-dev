@@ -1,0 +1,143 @@
+.record-edit-page {
+  min-height: 100vh;
+  background: #f8fafc;
+
+  .loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+  }
+
+  .edit-scroll {
+    height: 100vh;
+  }
+}
+
+.edit-container {
+  padding: 16px;
+}
+
+.edit-header {
+  text-align: center;
+  padding: 20px 0;
+
+  .header-title {
+    font-size: 20px;
+    font-weight: bold;
+    color: #1f2937;
+  }
+}
+
+.form-section {
+  margin-bottom: 24px;
+}
+
+.form-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.form-input {
+  width: 100%;
+  padding: 14px 16px;
+  background: white;
+  border-radius: 12px;
+  font-size: 16px;
+  border: 1px solid #e5e7eb;
+
+  &:focus {
+    border-color: #f97316;
+    outline: none;
+  }
+}
+
+.category-selector {
+  .category-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+
+    &:active {
+      background: #f9fafb;
+    }
+  }
+
+  .category-text {
+    font-size: 16px;
+    color: #1f2937;
+  }
+
+  .category-arrow {
+    font-size: 20px;
+    color: #9ca3af;
+  }
+}
+
+.date-display {
+  padding: 14px 16px;
+  background: #f3f4f6;
+  border-radius: 12px;
+
+  .date-text {
+    font-size: 16px;
+    color: #6b7280;
+  }
+}
+
+.form-textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 14px 16px;
+  background: white;
+  border-radius: 12px;
+  font-size: 16px;
+  border: 1px solid #e5e7eb;
+  line-height: 1.6;
+
+  &:focus {
+    border-color: #f97316;
+    outline: none;
+  }
+}
+
+.char-count {
+  display: block;
+  text-align: right;
+  font-size: 12px;
+  color: #9ca3af;
+  margin-top: 4px;
+}
+
+.save-section {
+  margin-top: 32px;
+}
+
+.save-btn {
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(135deg, #f97316, #ea580c);
+  border-radius: 12px;
+  text-align: center;
+
+  &:active {
+    opacity: 0.8;
+  }
+
+  &.save-btn-disabled {
+    opacity: 0.5;
+  }
+}
+
+.save-btn-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+}
