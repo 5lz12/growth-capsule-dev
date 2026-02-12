@@ -13,11 +13,11 @@ export default function AddChildPage() {
   const today = new Date().toISOString().slice(0, 10)
 
   const handleSubmit = async () => {
-    if (\!name.trim()) {
+    if (!name.trim()) {
       Taro.showToast({ title: '请输入孩子姓名', icon: 'none' })
       return
     }
-    if (\!birthDate) {
+    if (!birthDate) {
       Taro.showToast({ title: '请选择出生日期', icon: 'none' })
       return
     }
@@ -46,7 +46,7 @@ export default function AddChildPage() {
   }
 
   const formatDisplayDate = (dateStr: string) => {
-    if (\!dateStr) return ''
+    if (!dateStr) return ''
     const [y, m, d] = dateStr.split('-')
     return `${y}年${m}月${d}日`
   }

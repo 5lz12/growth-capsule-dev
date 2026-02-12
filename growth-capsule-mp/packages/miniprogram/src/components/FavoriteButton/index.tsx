@@ -63,3 +63,5 @@ export default function FavoriteButton({
     </View>
   )
 }
+
+export { FavoriteButton }

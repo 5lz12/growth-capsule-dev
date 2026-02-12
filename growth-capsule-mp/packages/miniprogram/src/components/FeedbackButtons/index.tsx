@@ -80,3 +80,5 @@ export default function FeedbackButtons({ recordId }: FeedbackButtonsProps) {
     </View>
   )
 }
+
+export { FeedbackButtons }
