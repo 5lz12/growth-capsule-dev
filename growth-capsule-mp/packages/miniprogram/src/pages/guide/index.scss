@@ -1,0 +1,197 @@
+$brand-500: #F97316;
+$brand-50: #FFF8F0;
+$gray-100: #F3F4F6;
+$gray-500: #6B7280;
+$gray-700: #374151;
+$gray-800: #1F2937;
+
+.guide-page {
+  min-height: 100vh;
+  background: #f8fafc;
+  padding: 24px;
+  padding-bottom: 40px;
+}
+
+.intro-card {
+  background: linear-gradient(135deg, #FFF8F0, #ffffff);
+  border-radius: 24px;
+  padding: 40px 32px;
+  margin-bottom: 32px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.intro-title {
+  font-size: 36px;
+  font-weight: 700;
+  color: $gray-800;
+  display: block;
+  margin-bottom: 16px;
+}
+
+.intro-text {
+  font-size: 26px;
+  color: $gray-500;
+  line-height: 1.7;
+}
+
+// Stage cards
+.stage-card {
+  background: #fff;
+  border-radius: 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+}
+
+.stage-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 32px;
+}
+
+.stage-header-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.stage-icon {
+  font-size: 48px;
+}
+
+.stage-title-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.stage-title {
+  font-size: 30px;
+  font-weight: 600;
+  color: $gray-800;
+  display: block;
+}
+
+.stage-range {
+  font-size: 24px;
+  color: $gray-500;
+  display: block;
+  margin-top: 4px;
+}
+
+.stage-arrow {
+  font-size: 24px;
+  color: $gray-500;
+  transition: transform 0.2s;
+
+  &.expanded {
+    transform: rotate(90deg);
+  }
+}
+
+.stage-body {
+  padding: 0 32px 32px;
+}
+
+.milestone-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 0;
+  border-bottom: 1px solid $gray-100;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.milestone-icon {
+  font-size: 32px;
+}
+
+.milestone-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.milestone-label {
+  font-size: 24px;
+  font-weight: 600;
+  color: $gray-700;
+  display: block;
+}
+
+.milestone-text {
+  font-size: 24px;
+  color: $gray-500;
+  display: block;
+  margin-top: 4px;
+}
+
+.stage-tip {
+  background: $brand-50;
+  border-radius: 16px;
+  padding: 24px;
+  margin-top: 16px;
+}
+
+.stage-tip-text {
+  font-size: 24px;
+  color: $gray-700;
+  line-height: 1.7;
+}
+
+// Theory section
+.theory-section {
+  margin-top: 16px;
+  margin-bottom: 32px;
+}
+
+.theory-section-title {
+  font-size: 32px;
+  font-weight: 600;
+  color: $gray-800;
+  display: block;
+  margin-bottom: 24px;
+}
+
+.theory-card {
+  background: #fff;
+  border-radius: 24px;
+  padding: 32px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  border-left: 8px solid $gray-500;
+
+  &.theory-purple { border-left-color: #8B5CF6; }
+  &.theory-blue { border-left-color: #3B82F6; }
+  &.theory-green { border-left-color: #22C55E; }
+  &.theory-pink { border-left-color: #EC4899; }
+}
+
+.theory-name {
+  font-size: 28px;
+  font-weight: 600;
+  color: $gray-800;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.theory-desc {
+  font-size: 24px;
+  color: $gray-500;
+  line-height: 1.7;
+}
+
+// Disclaimer
+.disclaimer {
+  background: #FEF3C7;
+  border-radius: 16px;
+  padding: 24px;
+}
+
+.disclaimer-text {
+  font-size: 24px;
+  color: #92400E;
+  line-height: 1.7;
+}

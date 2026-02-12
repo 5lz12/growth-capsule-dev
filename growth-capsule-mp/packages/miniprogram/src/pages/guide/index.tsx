@@ -178,7 +178,7 @@ export default function GuidePage() {
       <View className='theory-section'>
         <Text className='theory-section-title'>📚 理论基础</Text>
         {THEORIES.map((theory, idx) => (
-          <View key={idx} className={"theory-card theory-" + theory.color"}>
+          <View key={idx} className={"theory-card theory-" + theory.color}>
             <Text className='theory-name'>{theory.name}</Text>
             <Text className='theory-desc'>{theory.desc}</Text>
           </View>
