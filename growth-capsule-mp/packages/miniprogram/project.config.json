@@ -1,6 +1,5 @@
 {
   "projectname": "growth-capsule-miniprogram",
-  "projectname": "growth-capsule-miniprogram",
   "description": "成长时间胶囊微信小程序",
   "appid": "wx0a99b9e7a65064dd",
   "setting": {
@@ -37,5 +36,6 @@
     "ignore": [],
     "include": []
   },
-  "editorSetting": {}
+  "editorSetting": {},
+  "libVersion": "3.14.2"
 }
