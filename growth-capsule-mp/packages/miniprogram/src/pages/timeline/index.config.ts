@@ -1,0 +1,4 @@
+export default definePageConfig({
+  navigationBarTitleText: '时光轴',
+  enablePullDownRefresh: true,
+})

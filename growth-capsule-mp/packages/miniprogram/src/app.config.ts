@@ -1,0 +1,56 @@
+export default defineAppConfig({
+  pages: [
+    'pages/home/index',
+    'pages/timeline/index',
+    'pages/insights/index',
+    'pages/profile/index',
+    'pages/child-detail/index',
+    'pages/add-child/index',
+    'pages/record/index',
+    'pages/voice-record/index',
+    'pages/photo-record/index',
+    'pages/record-detail/index',
+    'pages/child-edit/index',
+    'pages/guide/index',
+    'pages/help/index',
+  ],
+  tabBar: {
+    color: '#9CA3AF',
+    selectedColor: '#F97316',
+    backgroundColor: '#FFFFFF',
+    borderStyle: 'white',
+    list: [
+      {
+        pagePath: 'pages/home/index',
+        text: '记录',
+        iconPath: 'assets/tab-home.png',
+        selectedIconPath: 'assets/tab-home-active.png',
+      },
+      {
+        pagePath: 'pages/timeline/index',
+        text: '时光轴',
+        iconPath: 'assets/tab-timeline.png',
+        selectedIconPath: 'assets/tab-timeline-active.png',
+      },
+      {
+        pagePath: 'pages/insights/index',
+        text: '洞察',
+        iconPath: 'assets/tab-insights.png',
+        selectedIconPath: 'assets/tab-insights-active.png',
+      },
+      {
+        pagePath: 'pages/profile/index',
+        text: '我的',
+        iconPath: 'assets/tab-profile.png',
+        selectedIconPath: 'assets/tab-profile-active.png',
+      },
+    ],
+  },
+  window: {
+    backgroundTextStyle: 'light',
+    navigationBarBackgroundColor: '#FFFFFF',
+    navigationBarTitleText: '成长时间胶囊',
+    navigationBarTextStyle: 'black',
+    backgroundColor: '#FFF8F0',
+  },
+})

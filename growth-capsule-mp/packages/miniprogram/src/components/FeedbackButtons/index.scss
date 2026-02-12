@@ -1,0 +1,58 @@
+.feedback-buttons {
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.feedback-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.feedback-options {
+  display: flex;
+  justify-content: space-around;
+  gap: 12px;
+}
+
+.feedback-option {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 8px;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  transition: all 0.2s;
+
+  &:active {
+    opacity: 0.7;
+  }
+
+  &.feedback-selected {
+    background: #eff6ff;
+    border-color: #3b82f6;
+  }
+}
+
+.feedback-icon {
+  font-size: 24px;
+}
+
+.feedback-label {
+  font-size: 12px;
+  color: #4b5563;
+}
+
+.feedback-thanks {
+  font-size: 12px;
+  color: #059669;
+  text-align: center;
+  margin-top: 12px;
+}
