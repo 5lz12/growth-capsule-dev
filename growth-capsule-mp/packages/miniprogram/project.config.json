@@ -1,8 +1,8 @@
 {
-  "miniprogramRoot": "dist/",
+  "projectname": "growth-capsule-miniprogram",
   "projectname": "growth-capsule-miniprogram",
   "description": "成长时间胶囊微信小程序",
-  "appid": "",
+  "appid": "wx0a99b9e7a65064dd",
   "setting": {
     "urlCheck": true,
     "es6": false,
@@ -10,8 +10,32 @@
     "compileHotReLoad": false,
     "postcss": false,
     "minified": false,
-    "newFeature": true
+    "newFeature": true,
+    "compileWorklet": false,
+    "uglifyFileName": false,
+    "uploadWithSourceMap": true,
+    "packNpmManually": false,
+    "packNpmRelationList": [],
+    "minifyWXSS": true,
+    "minifyWXML": true,
+    "localPlugins": false,
+    "disableUseStrict": false,
+    "useCompilerPlugins": false,
+    "condition": false,
+    "swc": false,
+    "disableSWC": true,
+    "babelSetting": {
+      "ignore": [],
+      "disablePlugins": [],
+      "outputPath": ""
+    }
   },
   "compileType": "miniprogram",
-  "condition": {}
+  "condition": {},
+  "simulatorPluginLibVersion": {},
+  "packOptions": {
+    "ignore": [],
+    "include": []
+  },
+  "editorSetting": {}
 }

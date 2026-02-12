@@ -1,4 +1,4 @@
-import { PropsWithChildren } from 'react'
+import { PropsWithChildren, Fragment } from 'react'
 import { useLaunch } from '@tarojs/taro'
 import { ensureLogin } from './api/auth'
 import './app.scss'
@@ -10,7 +10,7 @@ function App({ children }: PropsWithChildren) {
     ensureLogin()
   })
 
-  return <>{children}</>
+  return <Fragment>{children}</Fragment>
 }
 
 export default App

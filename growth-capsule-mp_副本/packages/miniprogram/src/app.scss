@@ -1,0 +1,76 @@
+// Brand Colors
+$brand-50: #FFF8F0;
+$brand-100: #FFEDD5;
+$brand-200: #FED7AA;
+$brand-300: #FDBA74;
+$brand-400: #FB923C;
+$brand-500: #F97316;
+$brand-600: #EA580C;
+$brand-700: #C2410C;
+
+$accent-50: #F0FDF4;
+$accent-100: #DCFCE7;
+$accent-200: #BBF7D0;
+$accent-400: #4ADE80;
+$accent-500: #22C55E;
+$accent-600: #16A34A;
+
+// Gray scale
+$gray-50: #F9FAFB;
+$gray-100: #F3F4F6;
+$gray-200: #E5E7EB;
+$gray-300: #D1D5DB;
+$gray-400: #9CA3AF;
+$gray-500: #6B7280;
+$gray-600: #4B5563;
+$gray-700: #374151;
+$gray-800: #1F2937;
+$gray-900: #111827;
+
+// Global styles
+page {
+  background-color: $brand-50;
+  font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica,
+    Segoe UI, Arial, Roboto, 'PingFang SC', 'miui', 'Hiragino Sans GB',
+    'Microsoft Yahei', sans-serif;
+  color: $gray-800;
+  font-size: 28px;
+  line-height: 1.6;
+}
+
+// Utility classes
+.text-brand { color: $brand-500; }
+.text-brand-600 { color: $brand-600; }
+.text-accent { color: $accent-500; }
+.text-gray { color: $gray-500; }
+.text-gray-400 { color: $gray-400; }
+.text-gray-600 { color: $gray-600; }
+.text-gray-800 { color: $gray-800; }
+.text-white { color: #FFFFFF; }
+
+.bg-white { background-color: #FFFFFF; }
+.bg-brand { background-color: $brand-500; }
+.bg-brand-50 { background-color: $brand-50; }
+.bg-accent-50 { background-color: $accent-50; }
+
+.font-bold { font-weight: 700; }
+.font-semibold { font-weight: 600; }
+.font-medium { font-weight: 500; }
+
+.text-sm { font-size: 24px; }
+.text-xs { font-size: 22px; }
+.text-lg { font-size: 32px; }
+.text-xl { font-size: 36px; }
+.text-2xl { font-size: 40px; }
+
+.rounded-xl { border-radius: 24px; }
+.rounded-lg { border-radius: 16px; }
+.rounded-full { border-radius: 50%; }
+
+.shadow-sm {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.border-gray-100 {
+  border: 1px solid $gray-100;
+}

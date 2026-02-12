@@ -1,0 +1,388 @@
+.record-detail-page {
+  min-height: 100vh;
+  background: linear-gradient(to bottom, #fff7ed, #fef3c7, #ffffff);
+
+  .loading,
+  .empty-state {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 40px;
+  }
+
+  .detail-scroll {
+    height: 100vh;
+  }
+}
+
+.detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid #e5e7eb;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+
+  .header-left,
+  .header-right {
+    width: 44px;
+  }
+
+  .back-btn {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+
+    &:active {
+      background: #f3f4f6;
+    }
+
+    .back-icon {
+      font-size: 20px;
+      color: #4b5563;
+    }
+  }
+
+  .header-center {
+    flex: 1;
+    text-align: center;
+
+    .header-title {
+      font-size: 18px;
+      font-weight: bold;
+      color: #1f2937;
+    }
+
+    .header-subtitle {
+      font-size: 12px;
+      color: #6b7280;
+    }
+  }
+
+  .icon-btn {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+
+    &:active {
+      background: #f3f4f6;
+    }
+
+    .icon-text {
+      font-size: 18px;
+    }
+  }
+}
+
+.stage-badge {
+  display: inline-block;
+  margin: 16px;
+  padding: 10px 20px;
+  background: linear-gradient(to right, #f97316, #ea580c);
+  color: white;
+  border-radius: 9999px;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.record-card {
+  margin: 0 16px 16px;
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border: 1px solid #f3f4f6;
+
+  .record-image {
+    background: #f9fafb;
+
+    .image-img {
+      width: 100%;
+      height: 300px;
+    }
+  }
+
+  .record-content {
+    padding: 16px;
+  }
+
+  .record-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .category-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 12px;
+    background: #fff7ed;
+    color: #c2410c;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 500;
+    border: 1px solid #fed7aa;
+
+    .category-icon {
+      font-size: 14px;
+    }
+
+    .category-label {
+      font-size: 12px;
+    }
+  }
+
+  .record-date {
+    font-size: 12px;
+    color: #6b7280;
+  }
+
+  .record-behavior {
+    font-size: 20px;
+    font-weight: bold;
+    color: #1f2937;
+    margin-bottom: 8px;
+  }
+
+  .record-notes {
+    font-size: 14px;
+    color: #4b5563;
+    line-height: 1.6;
+  }
+
+  .record-footer {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid #f3f4f6;
+
+    .record-footer-text {
+      font-size: 12px;
+      color: #9ca3af;
+    }
+  }
+}
+
+.analysis-sections {
+  padding: 0 16px 32px;
+}
+
+.analysis-card {
+  margin-bottom: 16px;
+  padding: 20px;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+  .card-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card-text {
+    font-size: 15px;
+    color: #374151;
+    line-height: 1.7;
+  }
+}
+
+.stage-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+
+  .card-text {
+    color: #374151;
+  }
+}
+
+.psych-card {
+  background: linear-gradient(to bottom right, #faf5ff, #eef2ff);
+  border: 1px solid #e9d5ff;
+
+  .card-title {
+    color: #581c87;
+  }
+}
+
+.emotion-card {
+  background: linear-gradient(to bottom right, #fdf2f8, #fff1f2);
+  border: 1px solid #fbcfe8;
+
+  .card-title {
+    color: #831843;
+  }
+
+  .emotion-quote {
+    margin: 16px 0;
+    padding-left: 16px;
+    border-left: 4px solid #f9a8d4;
+
+    .quote-text {
+      font-size: 15px;
+      color: #374151;
+      font-style: italic;
+      line-height: 1.7;
+    }
+  }
+
+  .emotion-footer {
+    font-size: 13px;
+    color: #6b7280;
+    margin-top: 12px;
+  }
+}
+
+.suggestions-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+}
+
+.suggestion-item {
+  padding: 16px;
+  border-radius: 12px;
+  margin-bottom: 12px;
+
+  &.suggestion-gray {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+  }
+
+  &.suggestion-blue {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+  }
+
+  &.suggestion-amber {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+  }
+
+  &.suggestion-green {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+  }
+
+  .suggestion-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+
+    .suggestion-icon {
+      font-size: 20px;
+    }
+
+    .suggestion-label {
+      font-size: 13px;
+      font-weight: 600;
+    }
+  }
+
+  .suggestion-content {
+    font-size: 15px;
+    color: #374151;
+    line-height: 1.6;
+    margin-bottom: 12px;
+  }
+
+  .suggestion-insight {
+    margin-top: 12px;
+    padding-left: 12px;
+    border-left: 3px solid #d1d5db;
+
+    .insight-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: #4b5563;
+      margin-bottom: 4px;
+    }
+
+    .insight-text {
+      font-size: 13px;
+      color: #374151;
+      font-style: italic;
+    }
+  }
+
+  .suggestion-theory {
+    font-size: 12px;
+    color: #6b7280;
+    margin-top: 8px;
+  }
+}
+
+.confidence-card {
+  background: #f9fafb;
+  padding: 16px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+
+  .confidence-label {
+    font-size: 14px;
+    color: #374151;
+    margin-bottom: 8px;
+  }
+
+  .confidence-value {
+    font-size: 14px;
+    color: #1f2937;
+    margin-bottom: 4px;
+  }
+
+  .confidence-source {
+    font-size: 12px;
+    color: #6b7280;
+  }
+}
+
+.feedback-section {
+  margin-bottom: 16px;
+}
+
+.disclaimer-card {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  padding: 16px;
+  border-radius: 12px;
+
+  .disclaimer-text {
+    font-size: 12px;
+    color: #92400e;
+    line-height: 1.6;
+  }
+}
+
+.no-analysis {
+  background: white;
+  border-radius: 16px;
+  padding: 48px 24px;
+  text-align: center;
+  margin: 16px;
+
+  text {
+    color: #9ca3af;
+  }
+}
+
+.favorite-float {
+  position: fixed;
+  bottom: 24px;
+  right: 16px;
+  z-index: 100;
+}
