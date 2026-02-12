@@ -1,0 +1,39 @@
+{
+  "pages": [],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#FFFFFF",
+    "navigationBarTitleText": "成长时间胶囊",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#FFF8F0"
+  },
+  "tabBar": {
+    "custom": true,
+    "list": [
+      {
+        "pagePath": "pages/home/index",
+        "text": "记录",
+        "iconPath": "assets/tab-home.png",
+        "selectedIconPath": "assets/tab-home-active.png"
+      },
+      {
+        "pagePath": "pages/timeline/index",
+        "text": "时光轴",
+        "iconPath": "assets/tab-timeline.png",
+        "selectedIconPath": "assets/tab-timeline-active.png"
+      },
+      {
+        "pagePath": "pages/insights/index",
+        "text": "洞察",
+        "iconPath": "assets/tab-insights.png",
+        "selectedIconPath": "assets/tab-insights-active.png"
+      },
+      {
+        "pagePath": "pages/profile/index",
+        "text": "我的",
+        "iconPath": "assets/tab-profile.png",
+        "selectedIconPath": "assets/tab-profile-active.png"
+      }
+    ]
+  }
+}
