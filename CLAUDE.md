@@ -4,24 +4,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-成长时间胶囊 (Growth Capsule) - A web application for recording children's developmental behaviors and providing psychology-based analysis. The app tracks milestones across motor, language, social, cognitive, and emotional development categories.
+成长时间胶囊 (Growth Capsule) - A web application for recording children's developmental behaviors and providing psychology-based analysis. Tracks milestones across motor, language, social, cognitive, and emotional development categories.
 
 The repo contains two projects:
-- `growth-capsule/` - Main Next.js 14 web app (primary)
-- `growth-capsule-mp/` - WeChat mini-program monorepo (pnpm workspace, early stage)
+- `growth-capsule/` - Main Next.js 14 web app (primary, production-ready)
+- `growth-capsule-mp/` - WeChat mini-program monorepo via pnpm workspace (early stage)
 
 ## Development Commands
 
-All commands should be run from the `growth-capsule/` directory:
+### Main Web App (growth-capsule/)
 
 ```bash
-# Development
-npm run dev          # Start Next.js dev server on http://localhost:3000
-npm run build        # Production build
-npm start            # Start production server
-npm run lint         # Run ESLint
+cd growth-capsule
 
-# Database
+npm run dev          # Next.js dev server on http://localhost:3000
+npm run build        # Production build (also used for validation - no test suite)
+npm run lint         # ESLint
+
 npm run db:push      # Push Prisma schema to SQLite database
 npm run db:studio    # Open Prisma Studio GUI
 
@@ -30,13 +29,25 @@ npm run db:migrate-multiuser   # Add ownerUid to existing data
 npm run db:rollback-multiuser  # Revert to single-user
 ```
 
+### WeChat Mini-Program (growth-capsule-mp/)
+
+```bash
+cd growth-capsule-mp
+
+pnpm dev:mp          # Taro dev mode for WeChat mini-program
+pnpm build:mp        # Build mini-program for production
+pnpm dev:server      # Next.js backend on port 3001
+pnpm build:shared    # Build shared utilities package
+pnpm build:all       # Build shared → server → mini-program
+```
+
 No test suite is configured. Validation is done via `npm run build` and `npm run lint`.
 
 ## Core Architecture
 
 ### Analyzer Pattern (Multi-tier Fallback System)
 
-**Location**: `src/lib/analyzers/`
+**Location**: `growth-capsule/src/lib/analyzers/`
 
 - `base.ts` - `Analyzer` interface and type definitions
 - `analyzer-manager.ts` - Manages analyzers with priority-based fallback
@@ -64,16 +75,13 @@ Key functions:
 - `checkOwnership(resourceOwnerUid, currentUid)` - Returns 403 if mismatch
 - `getUserUploadDir(ownerUid, subdir)` / `getUserUploadUrl(...)` - Per-user file paths
 
-### Database Schema (Prisma + SQLite)
+### Database (Prisma + SQLite)
 
-**Models**:
-- `User` - User profile (uid as primary key, status, externalIds as JSON)
-- `Child` - Child profile (name, birthDate, gender, avatarUrl, ownerUid)
-- `Record` - Behavior records with `analysis` field storing JSON-serialized `GrowthAnalysisOutput`
-  - Indexed on `[childId, date]` and `[childId, isFavorite]` and `[ownerUid]`
-- `AnalysisRule` - Local psychology rules (age ranges, categories, milestones)
+Schema at `growth-capsule/prisma/schema.prisma`, database file at `growth-capsule/prisma/growth-capsule.db`.
 
-All data is scoped by `ownerUid` for multi-user isolation.
+**Models**: `User` (uid primary key), `Child` (profile + ownerUid), `Record` (behavior records with JSON-serialized analysis), `AnalysisRule` (local psychology rules).
+
+All data is scoped by `ownerUid` for multi-user isolation. Record is indexed on `[childId, date]`, `[childId, isFavorite]`, and `[ownerUid]`.
 
 ### Data Flow
 
@@ -85,74 +93,40 @@ All data is scoped by `ownerUid` for multi-user isolation.
 
 ### Type System
 
-**Central types** (`src/types/index.ts`):
-- `GrowthAnalysisOutput` - Main analysis output (developmentStage, psychologicalInterpretation, emotionalInterpretation, parentingSuggestions, milestone, confidenceLevel, source)
-- `ParentingSuggestion` - Structured advice with type, content, theoryReference, deepInsight
-- `SuggestionType`: `'observe' | 'emotional' | 'guidance' | 'none'`
-- `ConfidenceLevel`: `'high' | 'medium' | 'low'`
+Central types in `src/types/index.ts`:
+- `GrowthAnalysisOutput` - Main analysis result (developmentStage, psychologicalInterpretation, emotionalInterpretation, parentingSuggestions, milestone, confidenceLevel, source)
+- `ParentingSuggestion` - Structured advice with type (`observe` | `emotional` | `guidance` | `none`), content, theoryReference, deepInsight
+- **Behavior categories**: `motor`, `language`, `social`, `cognitive`, `emotional`
 
-**Behavior categories**: `motor`, `language`, `social`, `cognitive`, `emotional`
+### Mini-Program Architecture (growth-capsule-mp/)
 
-### App Router Structure
-
-```
-/                                    # Homepage with child list
-/children/new                        # Create child
-/children/[id]                       # Child detail page
-/children/[id]/record                # Add text record
-/children/[id]/photo-record          # Add photo record
-/children/[id]/voice-record          # Add voice record
-/children/[id]/insights              # Analysis insights
-/children/[id]/insights/[recordId]   # Single record analysis detail
-/children/[id]/edit                  # Edit child
-/children/[id]/delete                # Delete child
-/timeline                            # Timeline view with search/filters
-/insights                            # Global insights dashboard
-/profile                             # User profile & settings
-/export                              # Export/PDF generation
-/import                              # Import from Day One journal
-/guide                               # Growth stage guidance
-/help                                # Help page
-```
-
-**API Routes**:
-- `POST /api/analyze` - Standalone behavior analysis
-- `GET/POST /api/children` - List/create children
-- `GET/PUT/DELETE /api/children/[id]` - Child CRUD
-- `GET/POST /api/children/[id]/records` - List/create records (auto-analysis on create)
-- `POST /api/children/[id]/record-with-image` - Create record with image
-- `PUT /api/children/[id]/avatar` - Upload avatar
-- `GET/PUT/DELETE /api/records/[id]` - Record CRUD
-- `PUT /api/records/[id]/favorite` - Toggle favorite
-- `POST /api/upload/image` - Upload image
-- `POST /api/import` - Import Day One exports
-- `POST /api/dev/switch-uid` - Switch user UID (dev only)
+pnpm workspace with three packages:
+- `packages/miniprogram/` - Taro 4.1.11 + React 18 WeChat mini-program (mirrors web app pages)
+- `packages/server/` - Next.js 14 backend (port 3001), separate Prisma + SQLite instance
+- `packages/shared/` - TypeScript utility library (psychology rules, shared utils) consumed by both
 
 ### External API Configuration
 
-**Environment variables** (`.env`):
-- `AI_API_KEY` - API key for external AI service (optional)
-- `AI_API_ENDPOINT` - API endpoint URL (optional)
-- `AI_MODEL` - Model name (optional)
-- `AI_API_FORMAT` - `openai` or `anthropic` (auto-detected from endpoint if omitted)
-- `DEV_DEFAULT_UID` - Default user UID for development
+See `.env.example` in `growth-capsule/` for full setup reference.
 
-Supports OpenAI-compatible APIs (DeepSeek, GLM, Moonshot, QianWen, OpenAI) and Anthropic Claude natively. If not configured, falls back to local analyzer automatically.
+Key env vars: `AI_API_KEY`, `AI_API_ENDPOINT`, `AI_MODEL`, `AI_API_FORMAT` (`openai` or `anthropic`, auto-detected from endpoint if omitted), `DEV_DEFAULT_UID`.
+
+Supports OpenAI-compatible APIs (DeepSeek, GLM, Moonshot, QianWen, OpenAI) and Anthropic Claude natively. Falls back to local analyzer automatically if not configured.
 
 ### Styling and Theme
 
-**Tailwind CSS** with custom brand colors defined in `tailwind.config.ts`:
+**Tailwind CSS** with custom brand colors in `tailwind.config.ts`:
 - Brand (orange): 50-700 scale (`brand-500` = `#F97316`)
 - Accent (green): 50-600 scale (`accent-500` = `#22C55E`)
 
 Custom React components in `src/components/` - no external UI library. Mobile-first responsive design with bottom navigation bar (`BottomTabBar.tsx`).
 
-### Important Conventions
+## Important Conventions
 
 1. **Age calculation**: Always use `ageInMonths` for analysis (not years). Use `formatAge()` from `src/lib/utils.ts` for display.
 2. **File uploads**: Stored per-user at `public/uploads/users/{ownerUid}/{avatars|records}/` with `{timestamp}-{originalname}` filenames. Supports JPEG, PNG, HEIC (auto-converts to JPEG).
-3. **Analysis storage**: Store full JSON in `Record.analysis`, parse on read
-4. **Date handling**: Convert Date objects to/from ISO strings for Prisma
-5. **Error handling**: API routes return `{ success: true, ... }` or `{ success: false, error }` - never throw 500 errors
-6. **Chinese language**: UI text in Chinese, code/comments in English
-7. **Path alias**: `@/*` maps to `./src/*` in tsconfig
+3. **Analysis storage**: Store full JSON in `Record.analysis`, parse on read.
+4. **Date handling**: Convert Date objects to/from ISO strings for Prisma.
+5. **Error handling**: API routes return `{ success: true, ... }` or `{ success: false, error }` - never throw 500 errors.
+6. **Chinese language**: UI text in Chinese, code/comments in English.
+7. **Path alias**: `@/*` maps to `./src/*` in tsconfig.
