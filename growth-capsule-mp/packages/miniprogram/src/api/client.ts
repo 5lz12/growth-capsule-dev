@@ -11,7 +11,7 @@ export function isMockMode(): boolean {
   return useMock
 }
 
-interface RequestOptions {
+export interface RequestOptions {
   url: string
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE'
   data?: Record<string, unknown>

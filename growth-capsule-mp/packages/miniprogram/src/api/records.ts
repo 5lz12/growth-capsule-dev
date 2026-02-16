@@ -1,4 +1,5 @@
-import { request } from './client'
+import { request, RequestOptions } from './client'
+import { callCloudFunction, isCloudAvailable } from './cloud'
 
 export interface Record {
   id: string
@@ -23,58 +24,85 @@ interface ApiResponse<T> {
   error?: string
 }
 
+/**
+ * Cloud-primary, HTTP-fallback-only-when-unavailable helper.
+ * If cloud is available, calls the cloud function and re-throws on failure.
+ * If cloud is unavailable, falls back to HTTP.
+ */
+async function cloudOrHttp<T>(
+  cloudData: { action: string; [key: string]: unknown },
+  httpOptions: RequestOptions
+): Promise<T> {
+  if (isCloudAvailable()) {
+    try {
+      return await callCloudFunction<T>('records', cloudData)
+    } catch (error) {
+      console.error(`Cloud records/${cloudData.action} error:`, error)
+      throw error
+    }
+  }
+
+  return request<T>(httpOptions)
+}
+
 export const recordsApi = {
   /** Get a record by ID */
-  getById: (id: string) =>
-    request<ApiResponse<Record>>({
-      url: `/api/records/${id}`,
-    }),
+  getById: async (id: string): Promise<ApiResponse<Record>> => {
+    return cloudOrHttp<ApiResponse<Record>>(
+      { action: 'get', id },
+      { url: `/api/records/${id}` }
+    )
+  },
 
   /** Get records for a child */
-  list: (childId: string) =>
-    request<ApiResponse<Record[]>>({
-      url: `/api/children/${childId}/records`,
-    }),
+  list: async (childId: string): Promise<ApiResponse<Record[]>> => {
+    return cloudOrHttp<ApiResponse<Record[]>>(
+      { action: 'list', childId },
+      { url: `/api/children/${childId}/records` }
+    )
+  },
 
   /** Create a record */
-  create: (childId: string, data: {
+  create: async (childId: string, data: {
     category: string
     behavior: string
     date: string
     ageInMonths: number
     notes?: string
-  }) =>
-    request<ApiResponse<Record>>({
-      url: `/api/children/${childId}/records`,
-      method: 'POST',
-      data,
-    }),
+  }): Promise<ApiResponse<Record>> => {
+    return cloudOrHttp<ApiResponse<Record>>(
+      { action: 'create', childId, data },
+      { url: `/api/children/${childId}/records`, method: 'POST', data }
+    )
+  },
 
   /** Update a record */
-  update: (id: string, data: {
+  update: async (id: string, data: {
     category?: string
     behavior?: string
     date?: string
     ageInMonths?: number
     notes?: string
-  }) =>
-    request<ApiResponse<Record>>({
-      url: `/api/records/${id}`,
-      method: 'PUT',
-      data,
-    }),
+  }): Promise<ApiResponse<Record>> => {
+    return cloudOrHttp<ApiResponse<Record>>(
+      { action: 'update', id, data },
+      { url: `/api/records/${id}`, method: 'PUT', data }
+    )
+  },
 
   /** Toggle favorite */
-  toggleFavorite: (id: string) =>
-    request<ApiResponse<{ isFavorite: boolean }>>({
-      url: `/api/records/${id}/favorite`,
-      method: 'PUT',
-    }),
+  toggleFavorite: async (id: string): Promise<ApiResponse<{ isFavorite: boolean }>> => {
+    return cloudOrHttp<ApiResponse<{ isFavorite: boolean }>>(
+      { action: 'toggleFavorite', id },
+      { url: `/api/records/${id}/favorite`, method: 'PUT' }
+    )
+  },
 
   /** Delete a record */
-  delete: (id: string) =>
-    request<ApiResponse<null>>({
-      url: `/api/records/${id}`,
-      method: 'DELETE',
-    }),
+  delete: async (id: string): Promise<ApiResponse<null>> => {
+    return cloudOrHttp<ApiResponse<null>>(
+      { action: 'delete', id },
+      { url: `/api/records/${id}`, method: 'DELETE' }
+    )
+  },
 }
