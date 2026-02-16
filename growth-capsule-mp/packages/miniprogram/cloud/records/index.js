@@ -70,13 +70,22 @@ async function createRecord(openid, childId, recordData) {
       date: new Date(recordData.date),
       ageInMonths: recordData.ageInMonths,
       notes: recordData.notes || null,
-      analysis: recordData.analysis || null,
+      analysis: null,
+      analysisStatus: 'pending',
       milestones: recordData.milestones || null,
       imageFileId: recordData.imageFileId || null,
       isFavorite: false,
       createdAt: now,
       updatedAt: now,
     },
+  })
+
+  // Fire-and-forget: trigger async analysis
+  cloud.callFunction({
+    name: 'analyze',
+    data: { action: 'analyzeRecord', recordId: _id },
+  }).catch((err) => {
+    console.error('Fire-and-forget analyze dispatch failed:', err)
   })
 
   return {
@@ -89,7 +98,8 @@ async function createRecord(openid, childId, recordData) {
       date: recordData.date,
       ageInMonths: recordData.ageInMonths,
       notes: recordData.notes || null,
-      analysis: recordData.analysis || null,
+      analysis: null,
+      analysisStatus: 'pending',
       milestones: recordData.milestones || null,
       imageUrl: recordData.imageFileId || null,
       isFavorite: false,
@@ -160,6 +170,7 @@ function normalizeRecord(doc) {
     notes: doc.notes || null,
     analysis: doc.analysis ? (typeof doc.analysis === 'string' ? doc.analysis : JSON.stringify(doc.analysis)) : null,
     milestones: doc.milestones || null,
+    analysisStatus: doc.analysisStatus || (doc.analysis ? 'done' : 'pending'),
     imageUrl: doc.imageFileId || null,
     isFavorite: doc.isFavorite || false,
     createdAt: doc.createdAt instanceof Date ? doc.createdAt.toISOString() : doc.createdAt,

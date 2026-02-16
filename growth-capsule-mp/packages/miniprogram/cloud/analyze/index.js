@@ -1,19 +1,50 @@
 const cloud = require('wx-server-sdk')
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
+const db = cloud.database()
 
-const { ANALYSIS_RULES, analyzeBehavior, getDevelopmentAdvice } = require('./lib/psychology')
+const { analyzeBehavior, getDevelopmentAdvice } = require('./lib/psychology')
 
 exports.main = async (event) => {
-  const { OPENID } = cloud.getWXContext()
-  const { behavior, category, ageInMonths, childName } = event
+  const { action = 'analyzeRecord' } = event
 
-  if (!behavior || !category || ageInMonths === undefined) {
-    return { success: false, error: 'Missing required fields: behavior, category, ageInMonths' }
+  switch (action) {
+    case 'analyzeRecord':
+      return await analyzeRecord(event.recordId)
+    default:
+      return { success: false, error: 'Unknown action' }
+  }
+}
+
+/**
+ * Read a record from DB, run analysis, write results back.
+ * Manages analysisStatus lifecycle: pending → analyzing → done | failed.
+ */
+async function analyzeRecord(recordId) {
+  if (!recordId) {
+    return { success: false, error: 'Missing recordId' }
+  }
+
+  let record
+  try {
+    const res = await db.collection('records').doc(recordId).get()
+    record = res.data
+  } catch (err) {
+    console.error('analyzeRecord: failed to read record', recordId, err)
+    return { success: false, error: 'Record not found' }
+  }
+
+  // Mark as analyzing
+  try {
+    await db.collection('records').doc(recordId).update({
+      data: { analysisStatus: 'analyzing', updatedAt: db.serverDate() },
+    })
+  } catch (err) {
+    console.error('analyzeRecord: failed to set analyzing status', err)
   }
 
   try {
-    const result = analyzeBehavior(behavior, category, ageInMonths)
-    const advice = getDevelopmentAdvice(category, ageInMonths)
+    const result = analyzeBehavior(record.behavior, record.category, record.ageInMonths)
+    const advice = getDevelopmentAdvice(record.category)
 
     const analysis = {
       developmentStage: result.milestone,
@@ -30,9 +61,27 @@ exports.main = async (event) => {
       source: 'local',
     }
 
+    await db.collection('records').doc(recordId).update({
+      data: {
+        analysis: JSON.stringify(analysis),
+        analysisStatus: 'done',
+        updatedAt: db.serverDate(),
+      },
+    })
+
     return { success: true, data: analysis }
   } catch (err) {
-    console.error('analyze error:', err)
+    console.error('analyzeRecord: analysis failed', recordId, err)
+
+    // Mark as failed
+    try {
+      await db.collection('records').doc(recordId).update({
+        data: { analysisStatus: 'failed', updatedAt: db.serverDate() },
+      })
+    } catch (updateErr) {
+      console.error('analyzeRecord: failed to set failed status', updateErr)
+    }
+
     return { success: false, error: err.message || 'Analysis failed' }
   }
 }

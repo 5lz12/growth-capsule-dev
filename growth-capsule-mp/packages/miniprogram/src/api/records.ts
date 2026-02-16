@@ -11,6 +11,7 @@ export interface Record {
   notes?: string
   analysis?: string
   milestones?: string
+  analysisStatus?: 'pending' | 'analyzing' | 'done' | 'failed'
   imageUrl?: string
   isFavorite: boolean
   createdAt: string

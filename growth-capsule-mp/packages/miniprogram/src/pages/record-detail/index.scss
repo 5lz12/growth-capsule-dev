@@ -368,6 +368,39 @@
   }
 }
 
+.analyzing-state {
+  background: white;
+  border-radius: 16px;
+  padding: 48px 24px;
+  text-align: center;
+  margin: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+
+  .analyzing-icon {
+    font-size: 36px;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  .analyzing-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #F97316;
+  }
+
+  .analyzing-desc {
+    font-size: 13px;
+    color: #9ca3af;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
 .no-analysis {
   background: white;
   border-radius: 16px;

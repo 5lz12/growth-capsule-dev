@@ -1,10 +1,13 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { View, Text, Image, ScrollView } from '@tarojs/components'
 import Taro, { useRouter, useShareAppMessage, useShareTimeline } from '@tarojs/taro'
 import { recordsApi, Record } from '../../api/records'
 import { FavoriteButton } from '../../components/FavoriteButton'
 import { FeedbackButtons } from '../../components/FeedbackButtons'
 import './index.scss'
+
+const POLL_INTERVAL = 2000
+const POLL_MAX_ATTEMPTS = 30 // 60 seconds max
 
 // 行为类别常量
 const BEHAVIOR_CATEGORIES = [
@@ -22,26 +25,77 @@ export default function RecordDetailPage() {
   const [record, setRecord] = useState<Record | null>(null)
   const [loading, setLoading] = useState(true)
   const [analysis, setAnalysis] = useState<any>(null)
+  const [analyzing, setAnalyzing] = useState(false)
+  const pollTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const pollCount = useRef(0)
 
-  useEffect(() => {
-    loadRecord()
-  }, [recordId])
+  const parseAnalysis = useCallback((data: Record) => {
+    if (data.analysis) {
+      try {
+        const parsed = JSON.parse(data.analysis)
+        if (parsed.parentingSuggestions) {
+          setAnalysis(parsed)
+        }
+      } catch {
+        // Legacy text format
+      }
+    }
+  }, [])
+
+  const stopPolling = useCallback(() => {
+    if (pollTimer.current) {
+      clearTimeout(pollTimer.current)
+      pollTimer.current = null
+    }
+    pollCount.current = 0
+  }, [])
+
+  const pollForAnalysis = useCallback(async () => {
+    if (pollCount.current >= POLL_MAX_ATTEMPTS) {
+      stopPolling()
+      setAnalyzing(false)
+      return
+    }
+
+    pollCount.current++
+    try {
+      const res = await recordsApi.getById(recordId)
+      if (res.success && res.data) {
+        setRecord(res.data)
+        const status = res.data.analysisStatus
+
+        if (status === 'done') {
+          parseAnalysis(res.data)
+          stopPolling()
+          setAnalyzing(false)
+          return
+        }
+
+        if (status === 'failed') {
+          stopPolling()
+          setAnalyzing(false)
+          return
+        }
+      }
+    } catch {
+      // Continue polling on transient errors
+    }
+
+    pollTimer.current = setTimeout(pollForAnalysis, POLL_INTERVAL)
+  }, [recordId, parseAnalysis, stopPolling])
 
   const loadRecord = async () => {
     try {
       const res = await recordsApi.getById(recordId)
       if (res.success && res.data) {
         setRecord(res.data)
-        // Parse analysis
-        if (res.data.analysis) {
-          try {
-            const parsed = JSON.parse(res.data.analysis)
-            if (parsed.parentingSuggestions) {
-              setAnalysis(parsed)
-            }
-          } catch {
-            // Legacy text format
-          }
+        parseAnalysis(res.data)
+
+        // Start polling if analysis is not ready
+        const status = res.data.analysisStatus
+        if (status === 'pending' || status === 'analyzing') {
+          setAnalyzing(true)
+          pollTimer.current = setTimeout(pollForAnalysis, POLL_INTERVAL)
         }
       }
     } catch (error) {
@@ -50,6 +104,11 @@ export default function RecordDetailPage() {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    loadRecord()
+    return () => stopPolling()
+  }, [recordId])
 
   const handleBack = () => {
     if (record?.childId) {
@@ -264,6 +323,16 @@ export default function RecordDetailPage() {
                 ⚠️ 温馨提示：本解读基于发展心理学理论提供参考，不替代专业心理评估或医疗建议。每个孩子的发展节奏不同，请结合实际情况理解。
               </Text>
             </View>
+          </View>
+        ) : analyzing ? (
+          <View className='analyzing-state'>
+            <Text className='analyzing-icon'>🔍</Text>
+            <Text className='analyzing-title'>正在分析中...</Text>
+            <Text className='analyzing-desc'>心理学引擎正在解读这条成长记录</Text>
+          </View>
+        ) : record.analysisStatus === 'failed' ? (
+          <View className='no-analysis'>
+            <Text>分析失败，请稍后重试</Text>
           </View>
         ) : (
           <View className='no-analysis'>
