@@ -14,11 +14,11 @@ interface CloudLoginResult {
 }
 
 /**
- * Perform login via cloud function (preferred) or HTTP fallback.
+ * Perform login via cloud function (primary) or HTTP (when cloud unavailable).
  * Cloud functions use WeChat OpenID automatically — no JWT needed.
+ * If cloud is available and fails, the error is re-thrown (no silent fallback).
  */
 export async function wechatLogin(): Promise<LoginResponse> {
-  // Prefer cloud function
   if (isCloudAvailable()) {
     try {
       const result = await callCloudFunction<CloudLoginResult>('user', {
@@ -30,12 +30,15 @@ export async function wechatLogin(): Promise<LoginResponse> {
         Taro.setStorageSync('auth_mode', 'cloud')
         return { success: true, uid: result.data.openid }
       }
+
+      throw new Error('Cloud login returned success: false')
     } catch (error) {
-      console.warn('Cloud login failed, falling back to HTTP:', error)
+      console.error('Cloud user/ensureLogin error:', error)
+      throw error
     }
   }
 
-  // Fallback: HTTP login with code exchange
+  // HTTP fallback — only when cloud is unavailable
   const { code } = await Taro.login()
   const result = await request<LoginResponse>({
     url: '/api/auth/wechat-login',

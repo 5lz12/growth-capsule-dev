@@ -1,4 +1,4 @@
-import { request, uploadFile, isMockMode } from './client'
+import { request, RequestOptions, uploadFile, isMockMode } from './client'
 import { callCloudFunction, isCloudAvailable, uploadCloudFile } from './cloud'
 import { mockChildren, mockResponse } from './mock-data'
 
@@ -35,25 +35,37 @@ interface ApiResponse<T> {
   error?: string
 }
 
+/**
+ * Cloud-primary, HTTP-fallback-only-when-unavailable helper.
+ * If cloud is available, calls the cloud function and re-throws on failure.
+ * If cloud is unavailable, falls back to HTTP.
+ */
+async function cloudOrHttp<T>(
+  cloudData: { action: string; [key: string]: unknown },
+  httpOptions: RequestOptions
+): Promise<T> {
+  if (isCloudAvailable()) {
+    try {
+      return await callCloudFunction<T>('children', cloudData)
+    } catch (error) {
+      console.error(`Cloud children/${cloudData.action} error:`, error)
+      throw error
+    }
+  }
+
+  return request<T>(httpOptions)
+}
+
 export const childrenApi = {
   /** Fetch all children for the current user */
   list: async (): Promise<ApiResponse<Child[]>> => {
     if (isMockMode()) return mockResponse(mockChildren as Child[])
 
-    // Cloud function path
-    if (isCloudAvailable()) {
-      try {
-        return await callCloudFunction<ApiResponse<Child[]>>('children', {
-          action: 'list',
-        })
-      } catch (error) {
-        console.warn('Cloud children.list failed, falling back:', error)
-      }
-    }
-
-    // HTTP fallback
     try {
-      return await request<ApiResponse<Child[]>>({ url: '/api/children' })
+      return await cloudOrHttp<ApiResponse<Child[]>>(
+        { action: 'list' },
+        { url: '/api/children' }
+      )
     } catch {
       return mockResponse(mockChildren as Child[])
     }
@@ -66,19 +78,11 @@ export const childrenApi = {
       return mockResponse((child || mockChildren[0]) as Child)
     }
 
-    if (isCloudAvailable()) {
-      try {
-        return await callCloudFunction<ApiResponse<Child>>('children', {
-          action: 'get',
-          id,
-        })
-      } catch (error) {
-        console.warn('Cloud children.get failed, falling back:', error)
-      }
-    }
-
     try {
-      return await request<ApiResponse<Child>>({ url: `/api/children/${id}` })
+      return await cloudOrHttp<ApiResponse<Child>>(
+        { action: 'get', id },
+        { url: `/api/children/${id}` }
+      )
     } catch {
       const child = mockChildren.find(c => c.id === id)
       return mockResponse((child || mockChildren[0]) as Child)
@@ -87,62 +91,26 @@ export const childrenApi = {
 
   /** Create a new child */
   create: async (data: { name: string; birthDate: string; gender: string }): Promise<ApiResponse<Child>> => {
-    if (isCloudAvailable()) {
-      try {
-        return await callCloudFunction<ApiResponse<Child>>('children', {
-          action: 'create',
-          data,
-        })
-      } catch (error) {
-        console.warn('Cloud children.create failed, falling back:', error)
-      }
-    }
-
-    return request<ApiResponse<Child>>({
-      url: '/api/children',
-      method: 'POST',
-      data,
-    })
+    return cloudOrHttp<ApiResponse<Child>>(
+      { action: 'create', data },
+      { url: '/api/children', method: 'POST', data }
+    )
   },
 
   /** Update a child */
   update: async (id: string, data: { name?: string; birthDate?: string; gender?: string }): Promise<ApiResponse<Child>> => {
-    if (isCloudAvailable()) {
-      try {
-        return await callCloudFunction<ApiResponse<Child>>('children', {
-          action: 'update',
-          id,
-          data,
-        })
-      } catch (error) {
-        console.warn('Cloud children.update failed, falling back:', error)
-      }
-    }
-
-    return request<ApiResponse<Child>>({
-      url: `/api/children/${id}`,
-      method: 'PUT',
-      data,
-    })
+    return cloudOrHttp<ApiResponse<Child>>(
+      { action: 'update', id, data },
+      { url: `/api/children/${id}`, method: 'PUT', data }
+    )
   },
 
   /** Delete a child */
   delete: async (id: string): Promise<ApiResponse<null>> => {
-    if (isCloudAvailable()) {
-      try {
-        return await callCloudFunction<ApiResponse<null>>('children', {
-          action: 'delete',
-          id,
-        })
-      } catch (error) {
-        console.warn('Cloud children.delete failed, falling back:', error)
-      }
-    }
-
-    return request<ApiResponse<null>>({
-      url: `/api/children/${id}`,
-      method: 'DELETE',
-    })
+    return cloudOrHttp<ApiResponse<null>>(
+      { action: 'delete', id },
+      { url: `/api/children/${id}`, method: 'DELETE' }
+    )
   },
 
   /** Upload avatar — cloud storage or HTTP */
@@ -157,7 +125,8 @@ export const childrenApi = {
           fileId: fileID,
         })
       } catch (error) {
-        console.warn('Cloud avatar upload failed, falling back:', error)
+        console.error('Cloud avatar upload error:', error)
+        throw error
       }
     }
 
