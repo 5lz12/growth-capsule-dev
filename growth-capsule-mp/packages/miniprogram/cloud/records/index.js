@@ -72,6 +72,7 @@ async function createRecord(openid, childId, recordData) {
       notes: recordData.notes || null,
       analysis: null,
       analysisStatus: 'pending',
+      retryCount: 0,
       milestones: recordData.milestones || null,
       imageFileId: recordData.imageFileId || null,
       isFavorite: false,
