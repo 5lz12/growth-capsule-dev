@@ -4,6 +4,13 @@ import Taro from '@tarojs/taro'
 // Production: point to deployed server URL
 const BASE_URL = process.env.TARO_APP_API_URL || 'http://localhost:3001'
 
+// Enable mock mode when no API URL is configured or API is unreachable
+let useMock = !process.env.TARO_APP_API_URL
+
+export function isMockMode(): boolean {
+  return useMock
+}
+
 interface RequestOptions {
   url: string
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE'
@@ -31,6 +38,7 @@ export async function request<T = unknown>(options: RequestOptions): Promise<T> 
       url: `${BASE_URL}${url}`,
       method,
       data,
+      timeout: 10000,
       header: {
         'Content-Type': 'application/json',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),

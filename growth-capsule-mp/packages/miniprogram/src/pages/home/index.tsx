@@ -27,12 +27,14 @@ export default function HomePage() {
 
   const loadData = useCallback(async () => {
     try {
+      setLoading(true)
       const res = await childrenApi.list()
       if (res.success) {
         setChildren(res.data)
       }
     } catch (error) {
       console.error('Failed to load children:', error)
+      setChildren([])
     } finally {
       setLoading(false)
     }

@@ -1,5 +1,20 @@
 {
-  "pages": [],
+  "pages": [
+    "pages/home/index",
+    "pages/timeline/index",
+    "pages/insights/index",
+    "pages/profile/index",
+    "pages/child-detail/index",
+    "pages/add-child/index",
+    "pages/record/index",
+    "pages/voice-record/index",
+    "pages/photo-record/index",
+    "pages/record-detail/index",
+    "pages/record-edit/index",
+    "pages/child-edit/index",
+    "pages/guide/index",
+    "pages/help/index"
+  ],
   "window": {
     "backgroundTextStyle": "light",
     "navigationBarBackgroundColor": "#FFFFFF",

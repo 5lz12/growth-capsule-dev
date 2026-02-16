@@ -15,7 +15,9 @@ export default defineConfig({
   plugins: [],
   defineConstants: {},
   copy: {
-    patterns: [],
+    patterns: [
+      { from: 'assets/', to: 'dist/assets/', ignore: ['.*'] },
+    ],
     options: {},
   },
   framework: 'react',
