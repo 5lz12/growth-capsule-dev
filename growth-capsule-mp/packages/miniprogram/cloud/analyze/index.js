@@ -182,7 +182,23 @@ async function runAnalysis(record, recordId) {
     return { success: false, error: 'Stale write skipped' }
   }
 
-  return { success: true, data: analysis }
+  return {
+    success: true,
+    data: {
+      milestone: { name: analysis.milestone, category: record.category },
+      interpretation: {
+        psychologicalInterpretation: analysis.psychologicalInterpretation,
+        emotionalInterpretation: analysis.emotionalInterpretation,
+      },
+      parentingSuggestions: analysis.parentingSuggestions,
+      confidenceLevel: analysis.confidenceLevel,
+      source: analysis.source,
+      // TODO remove in v2
+      developmentStage: analysis.developmentStage,
+      psychologicalInterpretation: analysis.psychologicalInterpretation,
+      emotionalInterpretation: analysis.emotionalInterpretation,
+    },
+  }
 }
 
 /**
