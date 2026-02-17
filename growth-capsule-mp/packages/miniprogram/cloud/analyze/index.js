@@ -3,7 +3,15 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 const db = cloud.database()
 const _ = db.command
 
-const { analyzeBehavior, getDevelopmentAdvice } = require('./lib/psychology')
+// Pluggable analyzer — selected by ANALYZE_MODE env var.
+// Supported values: 'local' (default), 'ai', 'hybrid'
+const ANALYZE_MODE = process.env.ANALYZE_MODE || 'local'
+const VALID_ANALYZE_MODES = ['local', 'ai', 'hybrid']
+if (!VALID_ANALYZE_MODES.includes(ANALYZE_MODE)) {
+  throw new Error(`[analyze] Invalid ANALYZE_MODE="${ANALYZE_MODE}". Must be one of: ${VALID_ANALYZE_MODES.join(', ')}`)
+}
+const analyzer = require(`./analyzers/${ANALYZE_MODE}`)
+console.log(`[analyze] mode=${ANALYZE_MODE}`)
 
 const ANALYZE_TIMEOUT_MS = 25000
 const MAX_RETRIES = 1
@@ -145,33 +153,18 @@ async function analyzeRecord(recordId) {
 }
 
 /**
- * Core analysis logic — extracted so it can be wrapped with timeout.
+ * Core analysis logic — delegates to the selected analyzer, then writes to DB.
+ * Extracted so it can be wrapped with a timeout in analyzeRecord().
  */
 async function runAnalysis(record, recordId) {
-  const result = analyzeBehavior(record.behavior, record.category, record.ageInMonths)
-  const advice = getDevelopmentAdvice(record.category)
-
-  const analysis = {
-    developmentStage: result.milestone,
-    psychologicalInterpretation: result.analysis,
-    emotionalInterpretation: null,
-    parentingSuggestions: advice.map((content, i) => ({
-      type: i === 0 ? 'observe' : i === 1 ? 'guidance' : 'emotional',
-      content,
-      theoryReference: null,
-      deepInsight: null,
-    })),
-    milestone: result.milestone,
-    confidenceLevel: result.importance === 'critical' ? 'high' : result.importance === 'important' ? 'medium' : 'low',
-    source: 'local',
-  }
+  const { analysis, source } = await analyzer.analyze(record)
 
   // Conditional write: only update if status is still 'analyzing' (prevents stale overwrites)
   const { stats } = await db.collection('records')
     .where({ _id: recordId, analysisStatus: 'analyzing' })
     .update({
       data: {
-        analysis: JSON.stringify(analysis),
+        analysis: JSON.stringify({ ...analysis, source }),
         analysisStatus: 'done',
         updatedAt: db.serverDate(),
       },
@@ -192,7 +185,7 @@ async function runAnalysis(record, recordId) {
       },
       parentingSuggestions: analysis.parentingSuggestions,
       confidenceLevel: analysis.confidenceLevel,
-      source: analysis.source,
+      source,
       // TODO remove in v2
       developmentStage: analysis.developmentStage,
       psychologicalInterpretation: analysis.psychologicalInterpretation,
