@@ -1,11 +1,19 @@
 const cloud = require('wx-server-sdk')
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 const db = cloud.database()
+const _ = db.command
 
 const { analyzeBehavior, getDevelopmentAdvice } = require('./lib/psychology')
 
 const ANALYZE_TIMEOUT_MS = 25000
 const MAX_RETRIES = 1
+
+// Enable post-update invariant checks when METRICS_INVARIANT_CHECK=true is set
+// in the cloud function's environment config, or when not running in production.
+// Never throws — only logs structured errors.
+const DEV_INVARIANT_CHECK =
+  process.env.METRICS_INVARIANT_CHECK === 'true' ||
+  (process.env.NODE_ENV !== undefined && process.env.NODE_ENV !== 'production')
 
 exports.main = async (event) => {
   const { action = 'analyzeRecord' } = event
@@ -44,7 +52,9 @@ async function analyzeRecord(recordId) {
 
   // Guard: skip if already done (duplicate invocation)
   if (record.analysisStatus === 'done') {
-    console.log(`[analyze] SKIP recordId=${recordId} — already done, duration=${Date.now() - startTime}ms`)
+    const duration = Date.now() - startTime
+    console.log(`[analyze] SKIP recordId=${recordId} — already done, duration=${duration}ms`)
+    recordMetrics({ totalCount: 1, skipCount: 1, totalDurationMs: duration })
     return { success: true, data: record.analysis ? JSON.parse(record.analysis) : null }
   }
 
@@ -71,6 +81,11 @@ async function analyzeRecord(recordId) {
 
     const duration = Date.now() - startTime
     console.log(`[analyze] OK recordId=${recordId} duration=${duration}ms`)
+    // Only count as success if the conditional write actually won (stats.updated === 1).
+    // runAnalysis returns success:false with error:'Stale write skipped' when it loses.
+    if (analysisResult.success) {
+      recordMetrics({ totalCount: 1, successCount: 1, totalDurationMs: duration })
+    }
     return analysisResult
   } catch (err) {
     const duration = Date.now() - startTime
@@ -80,6 +95,7 @@ async function analyzeRecord(recordId) {
     if (isTimeoutError(err) && currentRetryCount < MAX_RETRIES) {
       const newRetryCount = currentRetryCount + 1
       console.log(`[analyze] RETRY recordId=${recordId} retryCount=${newRetryCount} duration=${duration}ms`)
+      recordMetrics({ timeoutCount: 1, retryCount: 1 })
 
       try {
         await db.collection('records').doc(recordId).update({
@@ -99,6 +115,9 @@ async function analyzeRecord(recordId) {
 
         const retryDuration = Date.now() - startTime
         console.log(`[analyze] OK (retry) recordId=${recordId} duration=${retryDuration}ms`)
+        if (retryResult.success) {
+          recordMetrics({ totalCount: 1, successCount: 1, retrySuccessCount: 1, totalDurationMs: retryDuration })
+        }
         return retryResult
       } catch (retryErr) {
         lastError = retryErr
@@ -119,6 +138,8 @@ async function analyzeRecord(recordId) {
       console.error(`[analyze] FAIL set failed status recordId=${recordId}`, updateErr)
     }
 
+    const failDuration = Date.now() - startTime
+    recordMetrics({ totalCount: 1, failureCount: 1, totalDurationMs: failDuration })
     return { success: false, error: lastError.message || 'Analysis failed' }
   }
 }
@@ -162,4 +183,90 @@ async function runAnalysis(record, recordId) {
   }
 
   return { success: true, data: analysis }
+}
+
+/**
+ * In dev mode: read analyze_metrics/global and assert totalCount === successCount + failureCount + skipCount.
+ * Logs current totals and a structured error on violation. Never throws.
+ */
+async function checkMetricsInvariant() {
+  try {
+    const res = await db.collection('analyze_metrics').doc('global').get()
+    const d = res.data
+    const { totalCount = 0, successCount = 0, failureCount = 0, skipCount = 0 } = d
+    const expected = successCount + failureCount + skipCount
+    console.log(
+      `[metrics:invariant] totalCount=${totalCount} successCount=${successCount} failureCount=${failureCount} skipCount=${skipCount} expected=${expected}`
+    )
+    if (totalCount !== expected) {
+      console.error('[metrics:invariant] VIOLATION', JSON.stringify({
+        totalCount,
+        successCount,
+        failureCount,
+        skipCount,
+        expected,
+        delta: totalCount - expected,
+      }))
+    }
+  } catch (err) {
+    console.error('[metrics:invariant] FAIL read', err)
+  }
+}
+
+/**
+ * Fire-and-forget metrics recording to analyze_metrics/global.
+ * Uses atomic inc() throughout. Upsert strategy:
+ *   1. Try update() with _.inc() — succeeds if document exists.
+ *   2. On "not exist" error, add() with zero-base counters + the current deltas.
+ *   3. On duplicate-key error from add() (concurrent creator won the race),
+ *      retry update() once — the document now exists and the inc() will land.
+ * This ensures no invocation silently drops its increments.
+ */
+function recordMetrics(metrics) {
+  const incData = {}
+  for (const [key, value] of Object.entries(metrics)) {
+    incData[key] = _.inc(value)
+  }
+  incData.updatedAt = db.serverDate()
+
+  db.collection('analyze_metrics').doc('global').update({
+    data: incData,
+  }).then(() => {
+    if (DEV_INVARIANT_CHECK) checkMetricsInvariant()
+  }).catch((err) => {
+    const isNotExist = err.errCode === -1 || (err.message && err.message.includes('not exist'))
+    if (!isNotExist) {
+      console.error('[metrics] FAIL update', err)
+      return
+    }
+
+    // Document does not exist yet — try to create it with zero-base + current deltas.
+    const initial = {
+      _id: 'global',
+      totalCount: 0, successCount: 0, failureCount: 0,
+      timeoutCount: 0, retryCount: 0, retrySuccessCount: 0,
+      skipCount: 0, totalDurationMs: 0,
+    }
+    for (const [key, value] of Object.entries(metrics)) {
+      initial[key] = (initial[key] || 0) + value
+    }
+    initial.updatedAt = db.serverDate()
+
+    db.collection('analyze_metrics').add({ data: initial }).then(() => {
+      if (DEV_INVARIANT_CHECK) checkMetricsInvariant()
+    }).catch((addErr) => {
+      // A concurrent invocation already created the document.
+      // Retry the update() — the document now exists, so _.inc() will land.
+      const isDuplicate = addErr.errCode === -1 || (addErr.message && addErr.message.includes('already exist'))
+      if (isDuplicate) {
+        db.collection('analyze_metrics').doc('global').update({
+          data: incData,
+        }).then(() => {
+          if (DEV_INVARIANT_CHECK) checkMetricsInvariant()
+        }).catch(retryErr => console.error('[metrics] FAIL update (retry)', retryErr))
+      } else {
+        console.error('[metrics] FAIL create', addErr)
+      }
+    })
+  })
 }
