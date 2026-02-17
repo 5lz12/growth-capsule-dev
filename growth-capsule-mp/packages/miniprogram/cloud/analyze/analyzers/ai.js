@@ -1,5 +1,5 @@
 /**
- * AI analyzer — calls an external LLM API (OpenAI-compatible or Anthropic).
+ * AI analyzer — production-grade implementation.
  *
  * Contract: analyze(record) → { analysis, source }
  *   analysis — flat object matching the stored DB schema
@@ -7,20 +7,26 @@
  *
  * This module is pure computation — no DB access.
  *
- * Required env vars (set in WeChat cloud console):
- *   AI_API_KEY       — API key
- *   AI_API_ENDPOINT  — full URL, e.g. https://api.deepseek.com/v1/chat/completions
+ * Env vars (set in WeChat cloud console):
+ *   AI_API_KEY       — API key (required)
+ *   AI_API_ENDPOINT  — full URL (required)
  *   AI_MODEL         — model name (optional, defaults per format)
  *   AI_API_FORMAT    — 'openai' | 'anthropic' (optional, auto-detected from endpoint)
+ *   AI_TIMEOUT_MS    — per-attempt fetch timeout in ms (default: 15000)
+ *   AI_MAX_RETRIES   — max retry attempts on retryable errors (default: 2)
  *
- * Supported providers:
- *   OpenAI-compatible: DeepSeek, GLM, 通义千问, Moonshot, OpenAI, etc.
- *   Anthropic: Claude (detected when endpoint contains 'anthropic.com')
+ * Error contract:
+ *   analyze() throws an AiError with { type, message, retryable } on failure.
+ *   Callers (hybrid.js) inspect err.retryable to decide whether to fall back.
  */
+
+// ─── Config ───────────────────────────────────────────────────────────────────
 
 const AI_API_KEY      = process.env.AI_API_KEY      || ''
 const AI_API_ENDPOINT = process.env.AI_API_ENDPOINT || ''
 const AI_MODEL        = process.env.AI_MODEL        || ''
+const AI_TIMEOUT_MS   = parseInt(process.env.AI_TIMEOUT_MS  || '15000', 10)
+const AI_MAX_RETRIES  = parseInt(process.env.AI_MAX_RETRIES || '2',     10)
 
 function detectFormat() {
   const explicit = process.env.AI_API_FORMAT
@@ -35,6 +41,43 @@ const AI_FORMAT = detectFormat()
 function getDefaultModel() {
   if (AI_MODEL) return AI_MODEL
   return AI_FORMAT === 'anthropic' ? 'claude-sonnet-4-20250514' : 'gpt-4o'
+}
+
+// ─── Error classification ─────────────────────────────────────────────────────
+
+/**
+ * Normalized AI error.
+ * @typedef {{ type: 'timeout'|'network'|'api_4xx'|'api_5xx'|'parse'|'schema', message: string, retryable: boolean }} AiError
+ */
+
+function makeError(type, message) {
+  const retryable = type === 'timeout' || type === 'network' || type === 'api_5xx'
+  const err = new Error(message)
+  err.type = type
+  err.retryable = retryable
+  return err
+}
+
+// ─── Internal metrics (fire-and-forget console counters) ─────────────────────
+
+const _metrics = {
+  ai_calls:    0,
+  ai_success:  0,
+  ai_timeout:  0,
+  ai_error:    0,
+  ai_retry:    0,
+  ai_fallback: 0,
+}
+
+function _logMetrics(event) {
+  _metrics[event] = (_metrics[event] || 0) + 1
+  console.log('[ai:metrics]', JSON.stringify(_metrics))
+}
+
+// ─── Structured logging ───────────────────────────────────────────────────────
+
+function _log(fields) {
+  console.log('[ai]', JSON.stringify(fields))
 }
 
 // ─── Prompt ───────────────────────────────────────────────────────────────────
@@ -103,10 +146,27 @@ function buildPrompt(record) {
 `
 }
 
-// ─── HTTP calls ───────────────────────────────────────────────────────────────
+// ─── HTTP calls (with AbortController timeout) ────────────────────────────────
+
+async function fetchWithTimeout(url, options) {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), AI_TIMEOUT_MS)
+
+  try {
+    const response = await fetch(url, { ...options, signal: controller.signal })
+    return response
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      throw makeError('timeout', `[ai] timeout after ${AI_TIMEOUT_MS}ms`)
+    }
+    throw makeError('network', `[ai] network error: ${err.message}`)
+  } finally {
+    clearTimeout(timer)
+  }
+}
 
 async function callAnthropic(prompt, model) {
-  const response = await fetch(AI_API_ENDPOINT, {
+  const response = await fetchWithTimeout(AI_API_ENDPOINT, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -122,7 +182,8 @@ async function callAnthropic(prompt, model) {
 
   if (!response.ok) {
     const errorBody = await response.text().catch(() => '')
-    throw new Error(`Anthropic API error ${response.status}: ${errorBody}`)
+    const type = response.status >= 500 ? 'api_5xx' : 'api_4xx'
+    throw makeError(type, `[ai] Anthropic API ${response.status}: ${errorBody}`)
   }
 
   const data = await response.json()
@@ -130,7 +191,7 @@ async function callAnthropic(prompt, model) {
 }
 
 async function callOpenAICompatible(prompt, model) {
-  const response = await fetch(AI_API_ENDPOINT, {
+  const response = await fetchWithTimeout(AI_API_ENDPOINT, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -152,7 +213,8 @@ async function callOpenAICompatible(prompt, model) {
 
   if (!response.ok) {
     const errorBody = await response.text().catch(() => '')
-    throw new Error(`API error ${response.status}: ${errorBody}`)
+    const type = response.status >= 500 ? 'api_5xx' : 'api_4xx'
+    throw makeError(type, `[ai] API ${response.status}: ${errorBody}`)
   }
 
   const data = await response.json()
@@ -177,9 +239,18 @@ function parseResponse(text) {
     const start = text.indexOf('{')
     const end = text.lastIndexOf('}')
     if (start === -1 || end === -1) {
-      throw new Error('Failed to parse AI response as JSON')
+      throw makeError('parse', '[ai] failed to parse response as JSON')
     }
-    parsed = JSON.parse(text.slice(start, end + 1))
+    try {
+      parsed = JSON.parse(text.slice(start, end + 1))
+    } catch {
+      throw makeError('parse', '[ai] failed to parse response as JSON (brace fallback)')
+    }
+  }
+
+  // Validate required fields
+  if (!parsed.developmentStage && !parsed.psychologicalInterpretation) {
+    throw makeError('schema', '[ai] response missing required fields: developmentStage, psychologicalInterpretation')
   }
 
   const parentingSuggestions = Array.isArray(parsed.parentingSuggestions)
@@ -205,26 +276,76 @@ function parseResponse(text) {
   }
 }
 
+// ─── Single attempt ───────────────────────────────────────────────────────────
+
+async function callOnce(prompt, model) {
+  const responseText = AI_FORMAT === 'anthropic'
+    ? await callAnthropic(prompt, model)
+    : await callOpenAICompatible(prompt, model)
+
+  return parseResponse(responseText)
+}
+
 // ─── Main export ──────────────────────────────────────────────────────────────
 
 /**
  * @param {object} record  The full record document from DB.
  * @returns {{ analysis: object, source: string }}
+ * @throws {AiError}
  */
 async function analyze(record) {
   if (!AI_API_KEY || !AI_API_ENDPOINT) {
-    throw new Error('AI analyzer not configured: missing AI_API_KEY or AI_API_ENDPOINT')
+    throw makeError('schema', '[ai] not configured: missing AI_API_KEY or AI_API_ENDPOINT')
   }
 
   const prompt = buildPrompt(record)
   const model = getDefaultModel()
 
-  const responseText = AI_FORMAT === 'anthropic'
-    ? await callAnthropic(prompt, model)
-    : await callOpenAICompatible(prompt, model)
+  _metrics.ai_calls++
+  _logMetrics('ai_calls')
 
-  const analysis = parseResponse(responseText)
-  return { analysis, source: 'ai' }
+  let lastErr
+  for (let attempt = 0; attempt <= AI_MAX_RETRIES; attempt++) {
+    const t0 = Date.now()
+
+    try {
+      const analysis = await callOnce(prompt, model)
+      const duration_ms = Date.now() - t0
+      _log({ attempt, duration_ms, status: 'success' })
+      _logMetrics('ai_success')
+      return { analysis, source: 'ai' }
+    } catch (err) {
+      const duration_ms = Date.now() - t0
+      lastErr = err
+
+      // Normalize non-AiErrors (unexpected throws)
+      if (!err.type) {
+        lastErr = makeError('network', `[ai] unexpected error: ${err.message}`)
+      }
+
+      const retrying = lastErr.retryable && attempt < AI_MAX_RETRIES
+
+      _log({
+        attempt,
+        duration_ms,
+        error_type: lastErr.type,
+        retrying,
+      })
+
+      if (lastErr.type === 'timeout') _logMetrics('ai_timeout')
+      else _logMetrics('ai_error')
+
+      if (!retrying) break
+
+      _logMetrics('ai_retry')
+
+      // Exponential backoff with jitter: 500ms * 2^attempt + [0, 200)ms
+      const backoff = 500 * Math.pow(2, attempt) + Math.floor(Math.random() * 200)
+      await new Promise((resolve) => setTimeout(resolve, backoff))
+    }
+  }
+
+  throw lastErr
 }
 
-module.exports = { analyze }
+module.exports = { analyze, _metrics }
