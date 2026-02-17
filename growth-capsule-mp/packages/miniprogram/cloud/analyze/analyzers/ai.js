@@ -12,12 +12,12 @@
  *   AI_API_ENDPOINT  — full URL (required)
  *   AI_MODEL         — model name (optional, defaults per format)
  *   AI_API_FORMAT    — 'openai' | 'anthropic' (optional, auto-detected from endpoint)
- *   AI_TIMEOUT_MS    — per-attempt fetch timeout in ms (default: 15000)
- *   AI_MAX_RETRIES   — max retry attempts on retryable errors (default: 2)
+ *   AI_TIMEOUT_MS    — per-attempt fetch timeout in ms (default: 6000)
+ *   AI_MAX_RETRIES   — max retry attempts on retryable errors (default: 1)
  *
  * Error contract:
- *   analyze() throws an AiError with { type, message, retryable } on failure.
- *   Callers (hybrid.js) inspect err.retryable to decide whether to fall back.
+ *   analyze() throws an AiError with { type, message, retriable } on failure.
+ *   Callers (hybrid.js) inspect err.retriable to decide whether to fall back.
  */
 
 // ─── Config ───────────────────────────────────────────────────────────────────
@@ -25,8 +25,8 @@
 const AI_API_KEY      = process.env.AI_API_KEY      || ''
 const AI_API_ENDPOINT = process.env.AI_API_ENDPOINT || ''
 const AI_MODEL        = process.env.AI_MODEL        || ''
-const AI_TIMEOUT_MS   = parseInt(process.env.AI_TIMEOUT_MS  || '15000', 10)
-const AI_MAX_RETRIES  = parseInt(process.env.AI_MAX_RETRIES || '2',     10)
+const AI_TIMEOUT_MS   = parseInt(process.env.AI_TIMEOUT_MS  || '6000', 10)
+const AI_MAX_RETRIES  = parseInt(process.env.AI_MAX_RETRIES || '1',    10)
 
 function detectFormat() {
   const explicit = process.env.AI_API_FORMAT
@@ -47,16 +47,21 @@ function getDefaultModel() {
 
 /**
  * Normalized AI error.
- * @typedef {{ type: 'timeout'|'network'|'api_4xx'|'api_5xx'|'parse'|'schema', message: string, retryable: boolean }} AiError
+ * @typedef {{ type: 'timeout'|'network'|'api_5xx'|'validation'|'parse'|'config', message: string, retriable: boolean }} AiError
  */
 
-function makeError(type, message) {
-  const retryable = type === 'timeout' || type === 'network' || type === 'api_5xx'
-  const err = new Error(message)
-  err.type = type
-  err.retryable = retryable
-  return err
+class AiError extends Error {
+  constructor(type, message) {
+    super(message)
+    this.name = 'AiError'
+    this.type = type
+    this.retriable = type === 'timeout' || type === 'network' || type === 'api_5xx'
+  }
 }
+
+// ─── Production flag ──────────────────────────────────────────────────────────
+
+const IS_PRODUCTION = process.env.NODE_ENV === 'production'
 
 // ─── Internal metrics (fire-and-forget console counters) ─────────────────────
 
@@ -64,12 +69,12 @@ const _metrics = {
   ai_calls:    0,
   ai_success:  0,
   ai_timeout:  0,
-  ai_error:    0,
-  ai_retry:    0,
+  ai_fail:     0,
   ai_fallback: 0,
 }
 
 function _logMetrics(event) {
+  if (IS_PRODUCTION) return
   _metrics[event] = (_metrics[event] || 0) + 1
   console.log('[ai:metrics]', JSON.stringify(_metrics))
 }
@@ -77,6 +82,7 @@ function _logMetrics(event) {
 // ─── Structured logging ───────────────────────────────────────────────────────
 
 function _log(fields) {
+  if (IS_PRODUCTION) return
   console.log('[ai]', JSON.stringify(fields))
 }
 
@@ -157,9 +163,9 @@ async function fetchWithTimeout(url, options) {
     return response
   } catch (err) {
     if (err.name === 'AbortError') {
-      throw makeError('timeout', `[ai] timeout after ${AI_TIMEOUT_MS}ms`)
+      throw new AiError('timeout', `[ai] timeout after ${AI_TIMEOUT_MS}ms`)
     }
-    throw makeError('network', `[ai] network error: ${err.message}`)
+    throw new AiError('network', `[ai] network error: ${err.message}`)
   } finally {
     clearTimeout(timer)
   }
@@ -182,8 +188,8 @@ async function callAnthropic(prompt, model) {
 
   if (!response.ok) {
     const errorBody = await response.text().catch(() => '')
-    const type = response.status >= 500 ? 'api_5xx' : 'api_4xx'
-    throw makeError(type, `[ai] Anthropic API ${response.status}: ${errorBody}`)
+    const type = response.status >= 500 ? 'api_5xx' : 'validation'
+    throw new AiError(type, `[ai] Anthropic API ${response.status}: ${errorBody}`)
   }
 
   const data = await response.json()
@@ -213,8 +219,8 @@ async function callOpenAICompatible(prompt, model) {
 
   if (!response.ok) {
     const errorBody = await response.text().catch(() => '')
-    const type = response.status >= 500 ? 'api_5xx' : 'api_4xx'
-    throw makeError(type, `[ai] API ${response.status}: ${errorBody}`)
+    const type = response.status >= 500 ? 'api_5xx' : 'validation'
+    throw new AiError(type, `[ai] API ${response.status}: ${errorBody}`)
   }
 
   const data = await response.json()
@@ -239,18 +245,18 @@ function parseResponse(text) {
     const start = text.indexOf('{')
     const end = text.lastIndexOf('}')
     if (start === -1 || end === -1) {
-      throw makeError('parse', '[ai] failed to parse response as JSON')
+      throw new AiError('parse', '[ai] failed to parse response as JSON')
     }
     try {
       parsed = JSON.parse(text.slice(start, end + 1))
     } catch {
-      throw makeError('parse', '[ai] failed to parse response as JSON (brace fallback)')
+      throw new AiError('parse', '[ai] failed to parse response as JSON (brace fallback)')
     }
   }
 
   // Validate required fields
   if (!parsed.developmentStage && !parsed.psychologicalInterpretation) {
-    throw makeError('schema', '[ai] response missing required fields: developmentStage, psychologicalInterpretation')
+    throw new AiError('validation', '[ai] response missing required fields: developmentStage, psychologicalInterpretation')
   }
 
   const parentingSuggestions = Array.isArray(parsed.parentingSuggestions)
@@ -295,7 +301,7 @@ async function callOnce(prompt, model) {
  */
 async function analyze(record) {
   if (!AI_API_KEY || !AI_API_ENDPOINT) {
-    throw makeError('schema', '[ai] not configured: missing AI_API_KEY or AI_API_ENDPOINT')
+    throw new AiError('config', '[ai] not configured: missing AI_API_KEY or AI_API_ENDPOINT')
   }
 
   const prompt = buildPrompt(record)
@@ -319,11 +325,11 @@ async function analyze(record) {
       lastErr = err
 
       // Normalize non-AiErrors (unexpected throws)
-      if (!err.type) {
-        lastErr = makeError('network', `[ai] unexpected error: ${err.message}`)
+      if (!(err instanceof AiError)) {
+        lastErr = new AiError('network', `[ai] unexpected error: ${err.message}`)
       }
 
-      const retrying = lastErr.retryable && attempt < AI_MAX_RETRIES
+      const retrying = lastErr.retriable && attempt < AI_MAX_RETRIES
 
       _log({
         attempt,
@@ -333,11 +339,9 @@ async function analyze(record) {
       })
 
       if (lastErr.type === 'timeout') _logMetrics('ai_timeout')
-      else _logMetrics('ai_error')
+      else _logMetrics('ai_fail')
 
       if (!retrying) break
-
-      _logMetrics('ai_retry')
 
       // Exponential backoff with jitter: 500ms * 2^attempt + [0, 200)ms
       const backoff = 500 * Math.pow(2, attempt) + Math.floor(Math.random() * 200)
