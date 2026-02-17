@@ -14,6 +14,7 @@
  *   AI_API_FORMAT    — 'openai' | 'anthropic' (optional, auto-detected from endpoint)
  *   AI_TIMEOUT_MS    — per-attempt fetch timeout in ms (default: 6000)
  *   AI_MAX_RETRIES   — max retry attempts on retryable errors (default: 1)
+ *   AI_DISABLED      — set 'true' to skip all AI calls and fall back immediately
  *
  * Error contract:
  *   analyze() throws an AiError with { type, message, retriable } on failure.
@@ -63,14 +64,24 @@ class AiError extends Error {
 
 const IS_PRODUCTION = process.env.NODE_ENV === 'production'
 
-// ─── Internal metrics (fire-and-forget console counters) ─────────────────────
+// ─── Internal metrics (fire-and-forget, in-process only) ─────────────────────
+//
+// ai_calls        — total analyze() invocations that reached the retry loop
+// ai_success      — successful AI responses
+// ai_timeout      — attempts that hit AbortController timeout
+// ai_fail         — attempts that failed for non-timeout reasons
+// ai_fallback     — incremented by hybrid.js on each fallback event
+// ai_circuit_open — calls rejected because the circuit was open
+// last_duration_ms— wall time of the most recent attempt (success or failure)
 
 const _metrics = {
-  ai_calls:    0,
-  ai_success:  0,
-  ai_timeout:  0,
-  ai_fail:     0,
-  ai_fallback: 0,
+  ai_calls:         0,
+  ai_success:       0,
+  ai_timeout:       0,
+  ai_fail:          0,
+  ai_fallback:      0,
+  ai_circuit_open:  0,
+  last_duration_ms: 0,
 }
 
 function _logMetrics(event) {
@@ -84,6 +95,38 @@ function _logMetrics(event) {
 function _log(fields) {
   if (IS_PRODUCTION) return
   console.log('[ai]', JSON.stringify(fields))
+}
+
+// ─── Circuit breaker (rolling-window, in-process) ─────────────────────────────
+//
+// Opens when >= CIRCUIT_THRESHOLD failures of type timeout|validation|api_5xx
+// occur within CIRCUIT_WINDOW_MS. Auto-resets as failures age out of the window.
+// When open: analyze() throws AiError('config', ...) immediately — hybrid.js
+// catches it and falls back to local, exactly as with any other AI failure.
+
+const _circuit = {
+  failures:  [],                 // timestamps of qualifying failures
+  windowMs:  10 * 60 * 1000,    // 10-minute rolling window
+  threshold: 5,                  // failures within window required to open
+}
+
+// Returns true if the circuit is currently open. Side-effect: prunes stale entries.
+function _circuitIsOpen() {
+  const now = Date.now()
+  _circuit.failures = _circuit.failures.filter(t => now - t < _circuit.windowMs)
+  return _circuit.failures.length >= _circuit.threshold
+}
+
+// Called after each qualifying failure. Logs a one-time warning the moment the
+// threshold is crossed (suppressed in production via _log's IS_PRODUCTION guard).
+function _recordCircuitFailure(errType) {
+  if (errType !== 'timeout' && errType !== 'validation' && errType !== 'api_5xx') return
+  const now = Date.now()
+  _circuit.failures.push(now)
+  _circuit.failures = _circuit.failures.filter(t => now - t < _circuit.windowMs)
+  if (_circuit.failures.length === _circuit.threshold) {
+    _log({ level: 'warn', event: 'circuit_open', failure_count: _circuit.threshold, window_ms: _circuit.windowMs })
+  }
 }
 
 // ─── Prompt ───────────────────────────────────────────────────────────────────
@@ -300,6 +343,23 @@ async function callOnce(prompt, model) {
  * @throws {AiError}
  */
 async function analyze(record) {
+  // ── Cost protection guard ──────────────────────────────────────────────────
+  // AI_DISABLED=true allows operators to hard-disable AI calls without
+  // redeploying. hybrid.js catches the thrown AiError and falls back to local.
+  if (process.env.AI_DISABLED === 'true') {
+    throw new AiError('config', '[ai] AI_DISABLED=true — skipping AI call')
+  }
+
+  // ── Circuit breaker ────────────────────────────────────────────────────────
+  // If >= 5 qualifying failures occurred in the last 10 minutes, reject fast.
+  // The counter and the console warning are handled by _recordCircuitFailure;
+  // this path only tracks rejected calls.
+  if (_circuitIsOpen()) {
+    _metrics.ai_circuit_open++
+    _log({ level: 'warn', event: 'circuit_rejected', failure_count: _circuit.failures.length })
+    throw new AiError('config', '[ai] circuit open — too many recent failures')
+  }
+
   if (!AI_API_KEY || !AI_API_ENDPOINT) {
     throw new AiError('config', '[ai] not configured: missing AI_API_KEY or AI_API_ENDPOINT')
   }
@@ -317,11 +377,13 @@ async function analyze(record) {
     try {
       const analysis = await callOnce(prompt, model)
       const duration_ms = Date.now() - t0
+      _metrics.last_duration_ms = duration_ms
       _log({ attempt, duration_ms, status: 'success' })
       _logMetrics('ai_success')
       return { analysis, source: 'ai' }
     } catch (err) {
       const duration_ms = Date.now() - t0
+      _metrics.last_duration_ms = duration_ms
       lastErr = err
 
       // Normalize non-AiErrors (unexpected throws)
@@ -340,6 +402,8 @@ async function analyze(record) {
 
       if (lastErr.type === 'timeout') _logMetrics('ai_timeout')
       else _logMetrics('ai_fail')
+
+      _recordCircuitFailure(lastErr.type)
 
       if (!retrying) break
 
