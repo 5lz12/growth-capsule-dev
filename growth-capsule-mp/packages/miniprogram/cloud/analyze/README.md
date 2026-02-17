@@ -90,29 +90,31 @@ cloud/analyze/
 | `AI_API_ENDPOINT` | — | Required (full URL) |
 | `AI_MODEL` | `gpt-4o` / `claude-sonnet-4-20250514` | Optional |
 | `AI_API_FORMAT` | auto-detected | `openai` or `anthropic` |
-| `AI_TIMEOUT_MS` | `15000` | Per-attempt hard timeout |
-| `AI_MAX_RETRIES` | `2` | Max retry attempts on retryable errors |
+| `AI_TIMEOUT_MS` | `6000` | Per-attempt hard timeout |
+| `AI_MAX_RETRIES` | `1` | Max retry attempts on retriable errors |
 
 **Format detection:** `AI_API_FORMAT` env takes precedence; otherwise
 `anthropic` if endpoint URL contains `anthropic.com`, else `openai`.
 
-**Error types and retryability:**
+**AiError types and retriability:**
 
-| Type | Retryable | Cause |
-|------|-----------|-------|
-| `timeout` | yes | `AbortController` fired after `AI_TIMEOUT_MS` |
-| `network` | yes | `fetch` threw (DNS, TCP, TLS) |
-| `api_5xx` | yes | HTTP 5xx from the API provider |
-| `api_4xx` | no | HTTP 4xx (bad key, quota, invalid request) |
-| `parse` | no | Response is not valid JSON |
-| `schema` | no | Required fields absent, or missing config |
+`ai.js` throws `AiError` (extends `Error`) with `{ type, message, retriable }`.
+
+| Type | `retriable` | Cause |
+|------|-------------|-------|
+| `timeout` | true | `AbortController` fired after `AI_TIMEOUT_MS` |
+| `network` | true | `fetch` threw (DNS, TCP, TLS) |
+| `api_5xx` | true | HTTP 5xx from the API provider |
+| `validation` | false | HTTP 4xx, missing required response fields, or JSON parse failure |
+| `config` | false | `AI_API_KEY` or `AI_API_ENDPOINT` not set |
 
 **Retry loop:** `attempt = 0..AI_MAX_RETRIES`. Breaks immediately on
-non-retryable errors. Backoff: `500ms * 2^attempt + rand(0, 200)ms`.
+non-retriable errors. Backoff: `500ms * 2^attempt + rand(0, 200)ms`.
 
 **Internal metrics** (module-level singleton, exported as `_metrics`):
-`ai_calls`, `ai_success`, `ai_timeout`, `ai_error`, `ai_retry`, `ai_fallback`.
+`ai_calls`, `ai_success`, `ai_timeout`, `ai_fail`, `ai_fallback`.
 All logged to console via `[ai:metrics]` prefix — no DB writes.
+Suppressed when `NODE_ENV === 'production'`.
 
 ### `analyzers/hybrid.js` — orchestrator
 
@@ -123,6 +125,7 @@ All logged to console via `[ai:metrics]` prefix — no DB writes.
   `psychologicalInterpretation`, `emotionalInterpretation`,
   `parentingSuggestions` (only where non-null).
 - On any AI error, returns the unmodified local result with `source: 'local'`.
+  Fallback is unconditional — `hybrid.js` does **not** branch on `err.retriable`.
 - Does **not** duplicate retry logic — `ai.js` owns all retries internally.
 - Increments `aiAnalyzer._metrics.ai_fallback` on each fallback event.
 
@@ -214,6 +217,6 @@ No other files need to change.
 | `AI_API_ENDPOINT` | if ai/hybrid | — | Full API URL |
 | `AI_MODEL` | no | format-dependent | Model name |
 | `AI_API_FORMAT` | no | auto | `openai` or `anthropic` |
-| `AI_TIMEOUT_MS` | no | `15000` | Per-attempt timeout (ms) |
-| `AI_MAX_RETRIES` | no | `2` | Max retries on retryable errors |
+| `AI_TIMEOUT_MS` | no | `6000` | Per-attempt timeout (ms) |
+| `AI_MAX_RETRIES` | no | `1` | Max retries on retriable errors |
 | `METRICS_INVARIANT_CHECK` | no | — | Set `true` to enable dev checks |
