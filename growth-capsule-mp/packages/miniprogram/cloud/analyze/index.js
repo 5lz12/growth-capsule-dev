@@ -245,7 +245,11 @@ function recordMetrics(metrics) {
   }).catch((err) => {
     const isNotExist = err.errCode === -1 || (err.message && err.message.includes('not exist'))
     if (!isNotExist) {
-      console.error('[metrics] FAIL update', err)
+      try {
+        console.error('[metrics] FAIL update', err)
+      } catch (logErr) {
+        // Prevent error in error handler
+      }
       return
     }
 
@@ -272,10 +276,34 @@ function recordMetrics(metrics) {
           data: incData,
         }).then(() => {
           if (DEV_INVARIANT_CHECK) checkMetricsInvariant()
-        }).catch(retryErr => console.error('[metrics] FAIL update (retry)', retryErr))
+        }).catch(retryErr => {
+          try {
+            console.error('[metrics] FAIL update (retry)', retryErr)
+          } catch (logErr) {
+            // Prevent error in error handler
+          }
+        })
       } else {
-        console.error('[metrics] FAIL create', addErr)
+        try {
+          console.error('[metrics] FAIL create', addErr)
+        } catch (logErr) {
+          // Prevent error in error handler
+        }
+      }
+    }).catch((unexpectedErr) => {
+      // Terminal safety net for the entire add() chain
+      try {
+        console.error('[metrics] FAIL add chain (unexpected)', unexpectedErr)
+      } catch (logErr) {
+        // Prevent error in error handler
       }
     })
+  }).catch((unexpectedOuterErr) => {
+    // Terminal safety net for the entire update() chain
+    try {
+      console.error('[metrics] FAIL outer chain (unexpected)', unexpectedOuterErr)
+    } catch (logErr) {
+      // Prevent error in error handler
+    }
   })
 }
