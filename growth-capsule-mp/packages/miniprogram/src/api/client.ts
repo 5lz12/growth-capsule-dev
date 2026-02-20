@@ -2,10 +2,12 @@ import Taro from '@tarojs/taro'
 
 // Development: point to local Next.js API server
 // Production: point to deployed server URL
-const BASE_URL = process.env.TARO_APP_API_URL || 'http://localhost:3001'
+// typeof guard prevents ReferenceError in WeChat mini-program where process is not defined
+const _configuredApiUrl = typeof process !== 'undefined' ? process.env.TARO_APP_API_URL : undefined
+const BASE_URL = _configuredApiUrl || 'http://localhost:3001'
 
 // Enable mock mode when no API URL is configured or API is unreachable
-let useMock = !process.env.TARO_APP_API_URL
+let useMock = !_configuredApiUrl
 
 export function isMockMode(): boolean {
   return useMock
