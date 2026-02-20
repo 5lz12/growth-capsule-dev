@@ -57,7 +57,7 @@ export default function PhotoRecordPage() {
         Taro.showLoading({ title: '上传中...' })
 
         const uploadRes = await Taro.uploadFile({
-          url: `${process.env.TARO_APP_API_BASE}/api/upload/image`,
+          url: `${process.env.TARO_APP_API_URL}/api/upload/image`,
           filePath: res.tempFilePaths[0],
           name: 'photo',
           header: {
@@ -119,7 +119,7 @@ export default function PhotoRecordPage() {
         // If image was uploaded, update record with image
         if (imageUrl) {
           await Taro.request({
-            url: `${process.env.TARO_APP_API_BASE}/api/children/${childId}/record-with-image`,
+            url: `${process.env.TARO_APP_API_URL}/api/children/${childId}/record-with-image`,
             method: 'POST',
             header: { 'Content-Type': 'application/json' },
             data: {

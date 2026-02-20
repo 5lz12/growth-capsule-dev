@@ -13,7 +13,9 @@ export default defineConfig({
   sourceRoot: 'src',
   outputRoot: 'dist',
   plugins: [],
-  defineConstants: {},
+  defineConstants: {
+    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
+  },
   copy: {
     patterns: [
       { from: 'assets/', to: 'dist/assets/', ignore: ['.*'] },
